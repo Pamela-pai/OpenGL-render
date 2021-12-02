@@ -16,7 +16,11 @@
 
 #include "FakeGL.h"
 #include <math.h>
-
+#include <cassert>
+#include <memory.h>
+#include <limits>
+#include "MathUtils.h"
+#include "Shader.h"
 //-------------------------------------------------//
 //                                                 //
 // CONSTRUCTOR / DESTRUCTOR                        //
