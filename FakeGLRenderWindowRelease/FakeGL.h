@@ -22,11 +22,8 @@
 #include "Homogeneous4.h"
 #include "Matrix4.h"
 #include "RGBAImage.h"
-#include "StateMechine.h"
 #include <vector>
 #include <deque>
-#include <stack>
-#include <memory>
 
 // we will store all of the FakeGL context in a class object
 // this is similar to the real OpenGL which handles multiple windows
@@ -65,87 +62,35 @@ const unsigned int FAKEGL_PROJECTION = 2;
 const unsigned int FAKEGL_MODULATE = 1;
 const unsigned int FAKEGL_REPLACE = 2;
 
-
-
 // class with vertex attributes
 class vertexWithAttributes
-{ // class vertexWithAttributes
+    { // class vertexWithAttributes
     public:
-    // Position in OCS
+	// Position in OCS
     Homogeneous4 position;
-    // Colour
+	// Colour
     RGBAValue colour;
 
-    Cartesian3 normal;
+	// you may need to add more state here
 
-    Cartesian3 texCoord;//2D is OK
-
-
-    Homogeneous4 modeView;
-    Homogeneous4 projection;
-
-    double divZ; // 1 / z  used for depth test
-
-// you may need to add more state here
-}; // class vertexWithAttributes
-
-
+    }; // class vertexWithAttributes
 
 // class for a vertex after transformation to screen space
 class screenVertexWithAttributes
-{ // class screenVertexWithAttributes
+    { // class screenVertexWithAttributes
     public:
-    // Position in DCS
+	// Position in DCS
     Cartesian3 position;
-    // Colour
+	// Colour
     RGBAValue colour;
 
-    //normal vector
-    Cartesian3 normal;
+	// you may need to add more state here
 
-    //texture coord
-    Cartesian3 texCoord;
-
-    //Frag_Pos
-    Homogeneous4 modelViewCoord;
-
-    double divZ;
-
-
-
-    //in order to support lerp template function
-    auto operator*(float scale) const -> screenVertexWithAttributes{
-       screenVertexWithAttributes newSVW;
-       newSVW.position = position * scale;
-       newSVW.colour = colour * scale;
-       newSVW.normal = normal * scale;
-       newSVW.divZ = divZ * scale;
-       newSVW.texCoord = texCoord * scale;
-       return newSVW;
-    }
-
-    auto operator+ (const screenVertexWithAttributes & other) -> screenVertexWithAttributes
-    {
-        screenVertexWithAttributes newSVW;
-        newSVW.position = position + other.position;
-        newSVW.colour = colour+ other.colour;
-        newSVW.normal = normal+ other.normal;
-        newSVW.divZ = divZ+ other.divZ;
-        newSVW.texCoord = texCoord + other.texCoord;
-        return newSVW;
-    }
-
-// you may need to add more state here
-
-}; // class screenVertexWithAttributes
-
-
-
-
+    }; // class screenVertexWithAttributes
 
 // class for a fragment with attributes
 class fragmentWithAttributes
-{ // class fragmentWithAttributes
+    { // class fragmentWithAttributes
     public:
     // the row & column address in the framebuffer
     int row, col;
@@ -154,21 +99,7 @@ class fragmentWithAttributes
 
 	// you may need to add more state here
 
-    //normal vector
-    Cartesian3 normal;
-
-    //texture coord..
-    Cartesian3 texCoord;
-
-    //Frag_Pos
-    Homogeneous4 modelViewCoord;
-
-    double divZ;
-}; // class fragmentWithAttributes
-
-
-
-class Shader;
+    }; // class fragmentWithAttributes
 
 // the class storing the FakeGL context
 class FakeGL
@@ -232,9 +163,6 @@ class FakeGL
     // CONSTRUCTOR / DESTRUCTOR                        //
     //                                                 //
     //-------------------------------------------------//
-    
-
- 
     
     // constructor
     FakeGL();
@@ -375,17 +303,6 @@ class FakeGL
     //                                                 //
     //-------------------------------------------------//
     
-
-
-    void clearFramebuffer();
-    void clearDepth();
-
-    void normalizeToWindow(screenVertexWithAttributes & v) const;
-
-    StateMechine stateMechine;
-    std::shared_ptr<Shader> gouraudShader;
-    std::shared_ptr<Shader> phongShader;
-
     // flushes the pipeline
     void Flush();
 
@@ -413,17 +330,6 @@ class FakeGL
     // process a single fragment
     void ProcessFragment();
     
-
-
-
-
-    bool isDepthPassed(float x,float y, float z);
-
-
-
-
-
-
     }; // class FakeGL
 
 // standard routine for dumping the entire FakeGL context (except for texture / image)
