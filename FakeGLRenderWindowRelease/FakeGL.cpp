@@ -147,8 +147,6 @@ void FakeGL::Frustum(float left, float right, float bottom, float top, float zNe
         this->projectionMat = this->projectionMat * mat4;
     }
 
-
-
 } // Frustum()
 
 // sets an orthographic projection matrix
@@ -168,8 +166,6 @@ void FakeGL::Ortho(float left, float right, float bottom, float top, float zNear
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
         this->projectionMat = this->projectionMat * mat4;
     }
-
-
 } // Ortho()
 
 // rotate the matrix
@@ -180,7 +176,7 @@ void FakeGL::Rotatef(float angle, float axisX, float axisY, float axisZ)
     mat4.SetRotation(Cartesian3(axisX, axisY, axisZ),theta);
 
     if(this->currentMatMode==FAKEGL_MODELVIEW){
-        this->modelViewMat =  this->modelViewMat * mat4;
+        this->modelViewMat = this->modelViewMat * mat4;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
         this->projectionMat = this->projectionMat * mat4;
     }
@@ -198,8 +194,6 @@ void FakeGL::Scalef(float xScale, float yScale, float zScale)
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
         this->projectionMat =  this->projectionMat *mat4;
     }
-
-
 } // Scalef()
 
 // translate the matrix
@@ -229,10 +223,10 @@ void FakeGL::Viewport(int x, int y, int width, int height)
 } // Viewport()
 
 auto FakeGL::reflect(const Cartesian3 & vec,const Cartesian3 & normal) -> Cartesian3
-{
-    float dn = 2 * vec.dot(normal);
-    return vec - normal * dn;
-}
+    {
+        float dn = 2 * vec.dot(normal);
+        return vec - normal * dn;
+    }
 
 //-------------------------------------------------//
 //                                                 //
@@ -246,8 +240,6 @@ void FakeGL::Color3f(float red, float green, float blue)
     this->colorf.red = red*255;
     this->colorf.green = green*255;
     this->colorf.blue = blue*255;
-
-
 } // Color3f()
 
 // sets material properties
@@ -452,6 +444,7 @@ void FakeGL::TransformVertex()
     auto vertex = this->vertexQueue.front();
     vertexQueue.pop_front();
 
+    // implement matrix
     Homogeneous4 hg4(vertex.position.x, vertex.position.y, vertex.position.z);
     // model view transformation
     auto temp =  this->modelViewMat* hg4;
@@ -460,28 +453,37 @@ void FakeGL::TransformVertex()
     // perspective division
     Cartesian3 ndcs = screenResult.Point();
     // viewport mapping
-    Homogeneous4 ndcs4 = Homogeneous4(ndcs.x, ndcs.y, ndcs.z);
-    screenResult = this->viewPortMat * ndcs4;
-    screenVertexWithAttributes  screenVertex(screenResult.x, screenResult.y, screenResult.z);
+    Homogeneous4 ndcsHg4 = Homogeneous4(ndcs.x, ndcs.y, ndcs.z);
+    screenResult = this->viewPortMat * ndcsHg4;
 
+    Homogeneous4 hg4Normal = this->modelViewMat * vertex.normal;
+
+
+
+    screenVertexWithAttributes  screenVertex(screenResult.x, screenResult.y, screenResult.z);
     screenVertex.colour = this->colorf;
-    Homogeneous4 normal4 = this->modelViewMat * vertex.normal;
-    screenVertex.normal = normal4;
+    screenVertex.normal = hg4Normal;
 
     if(this->enable_texture_2D){
         screenVertex.u = this->textureU;
         screenVertex.v = this->textureV;
     }
     if(this->enable_lighting){
-        std::copy(std::begin(vertex.ambientM), std::end(vertex.ambientM), std::begin(screenVertex.ambientM));
-        std::copy(std::begin(vertex.diffuseM), std::end(vertex.diffuseM), std::begin(screenVertex.diffuseM));
-        std::copy(std::begin(vertex.specularM), std::end(vertex.specularM), std::begin(screenVertex.specularM));
-        std::copy(std::begin(vertex.emissionM), std::end(vertex.emissionM), std::begin(screenVertex.emissionM));
+        std::copy(std::begin(vertex.ambientM), std::end(vertex.ambientM),
+                  std::begin(screenVertex.ambientM));
+        std::copy(std::begin(vertex.diffuseM), std::end(vertex.diffuseM),
+                  std::begin(screenVertex.diffuseM));
+        std::copy(std::begin(vertex.specularM), std::end(vertex.specularM),
+                  std::begin(screenVertex.specularM));
+        std::copy(std::begin(vertex.emissionM), std::end(vertex.emissionM),
+                  std::begin(screenVertex.emissionM));
         screenVertex.shinessM = vertex.shinessM;
 
     }
-    // start rasterise
+
+
     this->rasterQueue.push_back(screenVertex);
+
     RasterisePrimitive();
 
 } // TransformVertex()
@@ -491,44 +493,51 @@ void FakeGL::TransformVertex()
 bool FakeGL::RasterisePrimitive()
 { // RasterisePrimitive()
     switch (this->currentPrimitive) {
-        case 0:{
-            // primitive is a point
+        case 0:{ //rasterise a vertex
             if(this->rasterQueue.size()>=1){
+//                std::cout<<"rasterise point"<<std::endl;
                 auto vertex = rasterQueue.front();
                 rasterQueue.pop_front();
-                //rasterise the point
+                //screenVertexWithAttributes rasterVertex(vertex.position.x, vertex.position.y, vertex.position.z);
                 RasterisePoint(vertex);
                 return true;
             }else
                 return false;
         }
-        case 1:{
-            // primitive is a line
+        case 1:{  //rasterise a line
             if(this->rasterQueue.size()>=2){
+
+//                std::cout<<"rasterise line"<<std::endl;
                 auto vertex1 = rasterQueue.front();rasterQueue.pop_front();
                 auto vertex2 = rasterQueue.front();rasterQueue.pop_front();
-                //rasterise the line
+//                screenVertexWithAttributes rasterVertex1(vertex1.position.x, vertex1.position.y, vertex1.position.z);
+//                screenVertexWithAttributes rasterVertex2(vertex2.position.x, vertex2.position.y, vertex2.position.z);
+
                 this->RasteriseLineSegment(vertex1, vertex2);
                 return true;
             }else
                 return false;
         }
-        case 2:{
-            // primitive is a triangle
+        case 2:{     // rasterise a triangle
+
+//            std::cout<<"render triangle"<<std::endl;
+
             if(this->rasterQueue.size()>=3){
                 auto vertex1 = rasterQueue.front();rasterQueue.pop_front();
                 auto vertex2 = rasterQueue.front();rasterQueue.pop_front();
                 auto vertex3 = rasterQueue.front();rasterQueue.pop_front();
-                //rasterise the triangle
+
+
                 RasteriseTriangle(vertex1, vertex2, vertex3);
                 return true;
             }else
                 return false;
         }
     }
-    // it doesn't have enough vertices to rasterise this primitive.
-    return false;
+    return false;   //can't rasterise a primitive;
 } // RasterisePrimitive()
+
+
 
 // depth test
 bool FakeGL::depthTest(int x, int y, float z){
@@ -539,22 +548,40 @@ bool FakeGL::depthTest(int x, int y, float z){
         return false;
 }
 
+
+
+
+
 // rasterises a single point
 void FakeGL::RasterisePoint(screenVertexWithAttributes &vertex0)
 { // RasterisePoint()
+    std::cout<<"rasterise"<<std::endl;
     int x = vertex0.position.x;
     int y = vertex0.position.y;
-//    int z = vertex0.position.z;
+    int z = vertex0.position.z;
     int pointSize = this->pointSize;
-    if(pointSize==0) {return;}
+    if(pointSize==0){
+        std::cout<<"pointsize is zero"<<std::endl;
+        return;
+    }
 
-    for(int i=x-(pointSize/2);i<=x+(pointSize/2);i++){
-        for(int j=y-(pointSize/2);j<=y+(pointSize/2);j++){
-            fragmentWithAttributes vertex(j,i,vertex0.colour);
-            this->fragmentQueue.push_back(vertex);
+    for(int _x=x-(pointSize/2);_x<=x+(pointSize/2);_x++){
+        for(int _y=y-(pointSize/2);_y<=y+(pointSize/2);_y++){
+
+            //TODO: implement depth test
+
+            fragmentWithAttributes shaderVertex(_y,_x,vertex0.colour);
+            this->fragmentQueue.push_back(shaderVertex);
+
         }
     }
+
     ProcessFragment();
+
+
+
+
+
 
 } // RasterisePoint()
 
@@ -562,41 +589,47 @@ void FakeGL::RasterisePoint(screenVertexWithAttributes &vertex0)
 void FakeGL::RasteriseLineSegment(screenVertexWithAttributes &vertex0, screenVertexWithAttributes &vertex1)
 { // RasteriseLineSegment()
 
-    int x0 = vertex0.position.x;
-    int y0 = vertex0.position.y;
-    int x1 = vertex1.position.x;
-    int y1 = vertex1.position.y;
+    int x0 = vertex0.position.x, y0 = vertex0.position.y;
+    int x1 = vertex1.position.x, y1 = vertex1.position.y;
 
-    bool flag = false;
+//       std::cout<<x0<<" "<<y0<<std::endl;
+//       std::cout<<x1<<" "<<y1<<std::endl;
+    bool steep = false;
     if (std::abs(x0-x1)<std::abs(y0-y1)) {
         std::swap(x0, y0);
         std::swap(x1, y1);
-        flag = true;
+        steep = true;
     }
     if (x0>x1) {
         std::swap(x0, x1);
         std::swap(y0, y1);
     }
-    int disX = x1-x0;
-    int disY = y1-y0;
-    int dis2Y = std::abs(disY)*2;
-    int acc = 0;
+    int dx = x1-x0;
+    int dy = y1-y0;
+    int derror2 = std::abs(dy)*2;
+    int error2 = 0;
     int y = y0;
     for (int x=x0; x<=x1; x++) {
-        if (flag) {
+        if (steep) {
             fragmentWithAttributes fragmentVertex(x, y, colorf);
             this->fragmentQueue.push_back(fragmentVertex);
         } else {
             fragmentWithAttributes fragmentVertex(y, x, colorf);
             this->fragmentQueue.push_back(fragmentVertex);
         }
-        acc += dis2Y;
-        if (acc > disX) {
+        error2 += derror2;
+        if (error2 > dx) {
             y += (y1>y0?1:-1);
-            acc -= disX*2;
+            error2 -= dx*2;
         }
     }
-    this->ProcessFragment();
+
+
+
+
+    ProcessFragment();
+
+
 } // RasteriseLineSegment()
 
 // rasterises a single triangle
