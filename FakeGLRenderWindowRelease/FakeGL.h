@@ -200,6 +200,7 @@ class FakeGL
     //-----------------------------
     // RASTERISE STATE
     //-----------------------------
+    bool depthTest(int x, int y, float z);
 
     //-----------------------------
     // OUTPUT FROM RASTER STAGE
