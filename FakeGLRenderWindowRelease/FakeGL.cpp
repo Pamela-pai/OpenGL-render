@@ -265,28 +265,28 @@ void FakeGL::Materialfv(unsigned int parameterName, const float *parameterValues
         }
     }*/
         if(parameterName & FAKEGL_EMISSION){
-            this->emissionMaterial[0] = parameterValues[0];
-            this->emissionMaterial[1] = parameterValues[1];
-            this->emissionMaterial[2] = parameterValues[2];
-            this->emissionMaterial[3] = parameterValues[3];
+            this->emissionM[0] = parameterValues[0];
+            this->emissionM[1] = parameterValues[1];
+            this->emissionM[2] = parameterValues[2];
+            this->emissionM[3] = parameterValues[3];
         }
         if(parameterName&FAKEGL_DIFFUSE){
-            this->diffuseMaterial[0] = parameterValues[0];
-            this->diffuseMaterial[1] = parameterValues[1];
-            this->diffuseMaterial[2] = parameterValues[2];
-            this->diffuseMaterial[3] = parameterValues[3];
+            this->diffuseM[0] = parameterValues[0];
+            this->diffuseM[1] = parameterValues[1];
+            this->diffuseM[2] = parameterValues[2];
+            this->diffuseM[3] = parameterValues[3];
         }
         if(parameterName&FAKEGL_SPECULAR){
-            this->specularMaterial[0] = parameterValues[0];
-            this->specularMaterial[1] = parameterValues[1];
-            this->specularMaterial[2] = parameterValues[2];
-            this->specularMaterial[3] = parameterValues[3];
+            this->specularM[0] = parameterValues[0];
+            this->specularM[1] = parameterValues[1];
+            this->specularM[2] = parameterValues[2];
+            this->specularM[3] = parameterValues[3];
         }
         if(parameterName & FAKEGL_AMBIENT){
-            this->ambientMaterial[0] = parameterValues[0];
-            this->ambientMaterial[1] = parameterValues[1];
-            this->ambientMaterial[2] = parameterValues[2];
-            this->ambientMaterial[3] = parameterValues[3];
+            this->ambientM[0] = parameterValues[0];
+            this->ambientM[1] = parameterValues[1];
+            this->ambientM[2] = parameterValues[2];
+            this->ambientM[3] = parameterValues[3];
 
 
         }
@@ -374,31 +374,31 @@ void FakeGL::Light(int parameterName, const float *parameterValues)
             }
         }*/
         if(parameterName & FAKEGL_AMBIENT){
-            ambietLight[0] = parameterValues[0];
-            ambietLight[1] = parameterValues[1];
-            ambietLight[2] = parameterValues[2];
-            ambietLight[3] = parameterValues[3];
+            ambietL[0] = parameterValues[0];
+            ambientL[1] = parameterValues[1];
+            ambientL[2] = parameterValues[2];
+            ambientL[3] = parameterValues[3];
 
         }
         if(parameterName & FAKEGL_DIFFUSE){
-            diffuseLight[0]=parameterValues[0];
-            diffuseLight[1]=parameterValues[1];
-            diffuseLight[2]=parameterValues[2];
-            diffuseLight[3]=parameterValues[3];
+            diffuseL[0]=parameterValues[0];
+            diffuseL[1]=parameterValues[1];
+            diffuseL[2]=parameterValues[2];
+            diffuseL[3]=parameterValues[3];
 
         }
         if(parameterName & FAKEGL_SPECULAR){
-            specularLight[0] = parameterValues[0];
-            specularLight[1] = parameterValues[1];
-            specularLight[2] = parameterValues[2];
-            specularLight[3] = parameterValues[3];
+            specularL[0] = parameterValues[0];
+            specularL[1] = parameterValues[1];
+            specularL[2] = parameterValues[2];
+            specularL[3] = parameterValues[3];
 
         }
         if(parameterName & FAKEGL_POSITION){
-            positionLight[0] = parameterValues[0];
-            positionLight[1] = parameterValues[1];
-            positionLight[2] = parameterValues[2];
-            positionLight[3] = parameterValues[3];
+            positionL[0] = parameterValues[0];
+            positionL[1] = parameterValues[1];
+            positionL[2] = parameterValues[2];
+            positionL[3] = parameterValues[3];
 
         }
     } // Light()
