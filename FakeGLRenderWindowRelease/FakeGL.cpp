@@ -371,7 +371,7 @@ void FakeGL::TexEnvMode(unsigned int textureMode)
 // sets the texture image that corresponds to a given ID
 void FakeGL::TexImage2D(const RGBAImage &textureImage)
     { // TexImage2D()
-        this->textureImage = textureImage;
+        this->textureImg = textureImage;
     } // TexImage2D()
 
 //-------------------------------------------------//
@@ -648,8 +648,8 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
         vertex2Light[i] += v2ambient + v2diffuse + v2specular + this->emissionM[i];
     }
 
-    int textureWidth = this->textureImage.width;
-    int textureHeight = this->textureImage.height;
+    int textureWidth = this->textureImg.width;
+    int textureHeight = this->textureImg.height;
 
     // loop through the pixels in the bounding box
     for (rasterFragment.row = minY; rasterFragment.row <= maxY; rasterFragment.row++)
@@ -690,9 +690,9 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
                 int interpV = (alpha*vertex0.v + beta*vertex1.v + gamma*vertex2.v) * textureHeight;
 
                 if(this->textureMode == FAKEGL_REPLACE){
-                    rasterFragment.colour = this->textureImage[interpU][interpV];
+                    rasterFragment.colour = this->textureImg[interpU][interpV];
                 }else if(this->textureMode == FAKEGL_MODULATE){
-                    rasterFragment.colour.modulate(this->textureImage[interpV][interpU]);
+                    rasterFragment.colour.modulate(this->textureImg[interpV][interpU]);
                 }
             }
             // lighting

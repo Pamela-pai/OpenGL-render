@@ -175,9 +175,11 @@ class FakeGL
     float positionL[4];
 
     unsigned int textureMode;
-    RGBAImage textureImage;
+    RGBAImage textureImg;
     RGBAValue backGroundColor;
     RGBAValue colorf;
+
+    std::deque<RGBAValue> textureQueue;
     //-----------------------------
     // OUTPUT FROM INPUT STAGE
     // INPUT TO TRANSFORM STAGE
