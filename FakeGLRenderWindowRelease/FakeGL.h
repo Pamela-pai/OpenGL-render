@@ -24,6 +24,8 @@
 #include "RGBAImage.h"
 #include <vector>
 #include <deque>
+//#include <stack>
+//#include <algorithm>
 
 // we will store all of the FakeGL context in a class object
 // this is similar to the real OpenGL which handles multiple windows
@@ -72,6 +74,16 @@ class vertexWithAttributes
     RGBAValue colour;
 
 	// you may need to add more state here
+    float emissionM[4];
+    float ambientM[4];
+    float specularM[4];
+    float diffuseM[4];
+    float shinessM;
+    Homogeneous4 normal;
+
+    vertexWithAttributes(float x,float y,float z){
+        position = Homogeneous4(x,y,z);
+    }
 
     }; // class vertexWithAttributes
 
@@ -84,7 +96,19 @@ class screenVertexWithAttributes
 	// Colour
     RGBAValue colour;
 
-	// you may need to add more state here
+    // you may need to add more state here
+    float u,v;
+    Homogeneous4 normal;
+
+    float emissionM[4];
+    float ambientM[4];
+    float specularM[4];
+    float diffuseM[4];
+    float shinessM;
+
+    screenVertexWithAttributes(float x,float y,float z){
+        position = Cartesian3(x,y,z);
+    }
 
     }; // class screenVertexWithAttributes
 
@@ -98,6 +122,13 @@ class fragmentWithAttributes
     RGBAValue colour;
 
 	// you may need to add more state here
+    fragmentWithAttributes(){};
+
+    fragmentWithAttributes(float x,float y,RGBAValue _colour){
+        row = x;
+        col = y;
+        colour = _colour;
+    }
 
     }; // class fragmentWithAttributes
 
@@ -114,6 +145,39 @@ class FakeGL
     // ATTRIBUTE STATE
     //-----------------------------
 
+    float pointSize = 1;
+    float lineWidth = 1;
+    unsigned int currentPrimitive;
+    unsigned int currentMatMode = -1;
+    std::stack<Matrix4> matStack;
+    Matrix4 modelViewMat;
+    Matrix4 projectionMat;
+    Matrix4 viewPortMat;
+    //material
+    float shinessM;
+    float emissionM[4];
+    float ambientM[4];
+    float specularM[4];
+    float diffuseM[4];
+
+    Homogeneous4 normal;
+    float textureU=-1;
+    float textureV=-1;
+
+    bool enable_depth_test = false;
+    bool enable_lighting = false;
+    bool enable_texture_2D = false;
+    bool enable_phong_shading = false;
+    //light
+    float ambientL[4];
+    float diffuseL[4];
+    float specularL[4];
+    float positionL[4];
+
+    unsigned int textureMode;
+    RGBAImage textureImage;
+    RGBAValue backGroundColor;
+    RGBAValue colorf;
     //-----------------------------
     // OUTPUT FROM INPUT STAGE
     // INPUT TO TRANSFORM STAGE
