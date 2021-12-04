@@ -713,8 +713,8 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
     // create a fragment for reuse
     fragmentWithAttributes rasterFragment;
 
-    int textureWidth = texture.width;
-    int textureHeight = texture.height;
+    int textureWidth = textureImg.width;
+    int textureHeight = textureImg.height;
 
     float vertex0Light[3]={0,0,0}, vertex1Light[3]={0,0,0}, vertex2Light[3]={0,0,0};
     Cartesian3 v0Normal(vertex0.normal.x, vertex0.normal.y, vertex0.normal.z);
@@ -744,9 +744,9 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
     for(int i=0;i<3;i++){
 
 
-        auto v0ambient = ambietL[i]*vertex0.ambientM[i];
-        auto v1ambient = ambietL[i]*vertex1.ambientM[i];
-        auto v2ambient = ambietL[i]*vertex2.ambientM[i];
+        auto v0ambient = ambientL[i]*vertex0.ambientM[i];
+        auto v1ambient = ambientL[i]*vertex1.ambientM[i];
+        auto v2ambient = ambientL[i]*vertex2.ambientM[i];
 
         auto v0diffuse = diffuseL[i]*vertex0.diffuseM[i]* std::max(v0Normal.dot(lightPosition), 0.0f);
         auto v1diffuse = diffuseL[i]*vertex1.diffuseM[i]* std::max(v1Normal.dot(lightPosition), 0.0f);
@@ -813,16 +813,16 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
                 int interpV = (alpha * vertex0.v + beta * vertex1.v + gamma * vertex2.v)* textureHeight;
 
                 if(this->textureMode == FAKEGL_REPLACE){
-                    rasterFragment.colour = this->texture[interpV][interpU];
+                    rasterFragment.colour = this->textureImg[interpV][interpU];
 
                 }else if( this->textureMode == FAKEGL_MODULATE){
-                    rasterFragment.colour.modulate(this->texture[interpV][interpU]);
+                    rasterFragment.colour.modulate(this->textureImg[interpV][interpU]);
                 }
             }
 
             if(this->enable_lighting){
 
-                if(this->enable_phonh_shading){
+                if(this->enable_phong_shading){
 
                     Cartesian3 interplNormal;
                     interplNormal = alpha * v0Normal + beta*v1Normal + gamma*v2Normal;
@@ -838,17 +838,17 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
 
                     auto lightReflect = reflect(lightPosition, interplNormal);
 
-                    rasterFragment.colour.red *= ambietL[0]*interplambientM[0] +
+                    rasterFragment.colour.red *= ambientL[0]*interplambientM[0] +
                                                  diffuseL[0]*interplspecularMastrial[0]*std::max(interplNormal.dot(lightPosition), 0.0f)+
                                                  specularL[0]*interplspecularMastrial[0]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
                                                  this->emissionM[0];
 
-                    rasterFragment.colour.green *=  ambietL[1]*interplambientM[1] +
+                    rasterFragment.colour.green *=  ambientL[1]*interplambientM[1] +
                                                     diffuseL[1]*interplspecularMastrial[1]*std::max(interplNormal.dot(lightPosition), 0.0f)+
                                                     specularL[1]*interplspecularMastrial[1]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
                                                     this->emissionM[1];
 
-                    rasterFragment.colour.blue *=  ambietL[2]*interplambientM[2] +
+                    rasterFragment.colour.blue *=  ambientL[2]*interplambientM[2] +
                                                    diffuseL[2]*interplspecularMastrial[2]*std::max(interplNormal.dot(lightPosition), 0.0f)+
                                                    specularL[2]*interplspecularMastrial[2]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
                                                    this->emissionM[2];
