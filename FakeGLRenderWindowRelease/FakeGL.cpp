@@ -374,7 +374,7 @@ void FakeGL::Light(int parameterName, const float *parameterValues)
             }
         }*/
         if(parameterName & FAKEGL_AMBIENT){
-            ambietL[0] = parameterValues[0];
+            ambientL[0] = parameterValues[0];
             ambientL[1] = parameterValues[1];
             ambientL[2] = parameterValues[2];
             ambientL[3] = parameterValues[3];
