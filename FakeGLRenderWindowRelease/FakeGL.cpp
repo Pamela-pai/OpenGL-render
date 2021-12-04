@@ -44,6 +44,7 @@ void FakeGL::Begin(unsigned int PrimitiveType)
 { // Begin()
     // set the primitive type
     this->currentPrimitive = PrimitiveType;
+
 } // Begin()
 
 // ends a sequence of geometric primitives
@@ -55,7 +56,7 @@ void FakeGL::End()
 // sets the size of a point for drawing
 void FakeGL::PointSize(float size)
 { // PointSize()
-    //set the point size
+    // set the point size
     this->pointSize = size;
 } // PointSize()
 
@@ -71,7 +72,13 @@ void FakeGL::LineWidth(float width)
 //                                                 //
 //-------------------------------------------------//
 
-// set the matrix mode (i.e. which one we change)   
+auto FakeGL::reflect(const Cartesian3 & vec,const Cartesian3 & normal) -> Cartesian3
+{
+    float dn = 2 * vec.dot(normal);
+    return vec - normal * dn;
+}
+
+// set the matrix mode (i.e. which one we change)
 void FakeGL::MatrixMode(unsigned int whichMatrix)
 { // MatrixMode()
     this->currentMatMode = whichMatrix;
@@ -112,16 +119,20 @@ void FakeGL::LoadIdentity()
 // multiply by a known matrix in column-major format
 void FakeGL::MultMatrixf(const float *columnMajorCoordinates)
 { // MultMatrixf()
-    Matrix4 mat4;
+    Matrix4 mat;
+//    memcpy(&mat.coordinates[0],columnMajorCoordinates,sizeof(float) * 16);
+//    mat = mat.transpose();
+
     for(int i=0;i<16;i++){
         int x = i%4;
         int y = i/4;
-        mat4[x][y] = columnMajorCoordinates[i];
+        mat[x][y] = columnMajorCoordinates[i];
     }
+
     if(this->currentMatMode==FAKEGL_MODELVIEW){
-        this->modelViewMat =  this->modelViewMat *mat4;
+        this->modelViewMat =  this->modelViewMat *mat;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat = this->projectionMat * mat4;
+        this->projectionMat = this->projectionMat * mat;
     }
 
 
@@ -131,20 +142,25 @@ void FakeGL::MultMatrixf(const float *columnMajorCoordinates)
 // sets up a perspective projection matrix
 void FakeGL::Frustum(float left, float right, float bottom, float top, float zNear, float zFar)
 { // Frustum()
-    Matrix4 mat4;
-    mat4.SetZero();
-    mat4[0][0] = (2.f*zNear)/(right-left);
-    mat4[1][1] = (2.f*zNear)/(top-bottom);
-    mat4[0][2] = (right+left)/(right-left);
-    mat4[1][2] = (top+bottom)/(top-bottom);
-    mat4[2][2] = -(zFar+zNear)/(zFar-zNear);
-    mat4[2][3] = -(2*zFar*zNear)/(zFar-zNear);
-    mat4[3][2] = -1;
+    Matrix4 mat;
+    mat.SetZero();
+    float A = (right+left)/(right-left);
+    float B = (top+bottom)/(top-bottom);
+    float C = -(zFar+zNear)/(zFar-zNear);
+    float D = -(2*zFar*zNear)/(zFar-zNear);
+
+    mat[0][0] = (2.f*zNear)/(right-left);
+    mat[1][1] = (2.f*zNear)/(top-bottom);
+    mat[0][2] = A;
+    mat[1][2] = B;
+    mat[2][2] = C;
+    mat[2][3] = D;
+    mat[3][2] = -1;
 
     if(this->currentMatMode == FAKEGL_MODELVIEW){
-        this->modelViewMat = this->modelViewMat * mat4;
+        this->modelViewMat = this->modelViewMat * mat;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat = this->projectionMat * mat4;
+        this->projectionMat = this->projectionMat * mat;
     }
 
 } // Frustum()
@@ -152,33 +168,37 @@ void FakeGL::Frustum(float left, float right, float bottom, float top, float zNe
 // sets an orthographic projection matrix
 void FakeGL::Ortho(float left, float right, float bottom, float top, float zNear, float zFar)
 { // Ortho()
-    Matrix4 mat4;
-    mat4[0][3] = -(right+left)/(right-left);
-    mat4[1][3] = -(top+bottom)/(top-bottom);
-    mat4[2][3] = -(zFar+zNear)/(zFar-zNear);
-    mat4[0][0] = 2.f/(right-left);
-    mat4[1][1] = 2/(top-bottom);
-    mat4[2][2] = -2/(zFar-zNear);
-    mat4[3][3] = 1;
+    Matrix4 mat;
+    float tx = -(right+left)/(right-left);
+    float ty = -(top+bottom)/(top-bottom);
+    float tz = -(zFar+zNear)/(zFar-zNear);
+
+    mat[0][0] = 2.f/(right-left);
+    mat[0][3] = tx;
+    mat[1][1] = 2/(top-bottom);
+    mat[1][3] = ty;
+    mat[2][2] = -2/(zFar-zNear);
+    mat[2][3] = tz;
+    mat[3][3] = 1;
 
     if(this->currentMatMode == FAKEGL_MODELVIEW){
-        this->modelViewMat =  this->modelViewMat * mat4;
+        this->modelViewMat =  this->modelViewMat * mat;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat = this->projectionMat * mat4;
+        this->projectionMat = this->projectionMat * mat;
     }
+
 } // Ortho()
 
 // rotate the matrix
 void FakeGL::Rotatef(float angle, float axisX, float axisY, float axisZ)
 { // Rotatef()
-    Matrix4 mat4;
+    Matrix4 rotationMat;
     float theta = angle * 3.14 / 180.f;
-    mat4.SetRotation(Cartesian3(axisX, axisY, axisZ),theta);
-
+    rotationMat.SetRotation(Cartesian3(axisX, axisY, axisZ),theta);
     if(this->currentMatMode==FAKEGL_MODELVIEW){
-        this->modelViewMat = this->modelViewMat * mat4;
+        this->modelViewMat =  this->modelViewMat * rotationMat;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat = this->projectionMat * mat4;
+        this->projectionMat = this->projectionMat * rotationMat;
     }
 
 } // Rotatef()
@@ -186,26 +206,26 @@ void FakeGL::Rotatef(float angle, float axisX, float axisY, float axisZ)
 // scale the matrix
 void FakeGL::Scalef(float xScale, float yScale, float zScale)
 { // Scalef()
-    Matrix4 mat4;
-    mat4.SetScale(xScale, yScale, zScale);
-
+    Matrix4 scaleMat;
+    scaleMat.SetScale(xScale, yScale, zScale);
     if(this->currentMatMode==FAKEGL_MODELVIEW){
-        this->modelViewMat =  this->modelViewMat *mat4;
+        this->modelViewMat =  this->modelViewMat *scaleMat;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat =  this->projectionMat *mat4;
+        this->projectionMat =  this->projectionMat *scaleMat;
     }
+
 } // Scalef()
 
 // translate the matrix
 void FakeGL::Translatef(float xTranslate, float yTranslate, float zTranslate)
 { // Translatef()
-    Matrix4 mat4;
-    mat4.SetTranslation(Cartesian3(xTranslate, yTranslate, zTranslate));
+    Matrix4 translateMat;
+    translateMat.SetTranslation(Cartesian3(xTranslate, yTranslate, zTranslate));
 
     if(this->currentMatMode==FAKEGL_MODELVIEW){
-        this->modelViewMat =   this->modelViewMat * mat4 ;
+        this->modelViewMat =   this->modelViewMat * translateMat ;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat =  this->projectionMat * mat4;
+        this->projectionMat =  this->projectionMat * translateMat;
     }
 } // Translatef()
 
@@ -216,17 +236,13 @@ void FakeGL::Viewport(int x, int y, int width, int height)
     viewPortMat[0][3] = (x+width/2.f);
     viewPortMat[1][3] = (y+height/2.f);
     viewPortMat[2][3] = 1;
+
     viewPortMat[0][0] = width/2.f;
     viewPortMat[1][1] = height/2.f;
     viewPortMat[2][2] = 1;
     viewPortMat[3][3] = 1;
-} // Viewport()
 
-auto FakeGL::reflect(const Cartesian3 & vec,const Cartesian3 & normal) -> Cartesian3
-    {
-        float dn = 2 * vec.dot(normal);
-        return vec - normal * dn;
-    }
+} // Viewport()
 
 //-------------------------------------------------//
 //                                                 //
@@ -240,6 +256,7 @@ void FakeGL::Color3f(float red, float green, float blue)
     this->colorf.red = red*255;
     this->colorf.green = green*255;
     this->colorf.blue = blue*255;
+
 } // Color3f()
 
 // sets material properties
@@ -321,21 +338,30 @@ void FakeGL::Vertex3f(float x, float y, float z)
 // disables a specific flag in the library
 void FakeGL::Disable(unsigned int property)
 { // Disable()
-    if(property == FAKEGL_DEPTH_TEST) {this->enable_depth_test = false;}
-    if(property == FAKEGL_LIGHTING) {this->enable_lighting = false;}
-    if(property == FAKEGL_TEXTURE_2D) {this->enable_texture_2D = false;}
-    if(property == FAKEGL_PHONG_SHADING) {this->enable_phong_shading = false;}
+    if(property == FAKEGL_DEPTH_TEST)
+        this->enable_depth_test = false;
+    if(property == FAKEGL_LIGHTING)
+        this->enable_lighting = false;
+    if(property == FAKEGL_TEXTURE_2D)
+        this->enable_texture_2D = false;
+    if(property == FAKEGL_PHONG_SHADING)
+        this->enable_phong_shading = false;
 
 } // Disable()
 
 // enables a specific flag in the library
 void FakeGL::Enable(unsigned int property)
 { // Enable()
-    if(property == FAKEGL_DEPTH_TEST) {this->enable_depth_test = true;
-        this->depthBuffer.Resize(frameBuffer.width, frameBuffer.height);}
-    if(property ==  FAKEGL_LIGHTING) {this->enable_lighting = true;}
-    if(property == FAKEGL_TEXTURE_2D) {this->enable_texture_2D = true;}
-    if(property == FAKEGL_PHONG_SHADING) {this->enable_phong_shading = true;}
+    if(property == FAKEGL_DEPTH_TEST){
+        this->enable_depth_test = true;
+        this->depthBuffer.Resize(frameBuffer.width, frameBuffer.height);
+    }
+    if(property ==  FAKEGL_LIGHTING)
+        this->enable_lighting = true;
+    if(property == FAKEGL_TEXTURE_2D)
+        this->enable_texture_2D = true;
+    if(property == FAKEGL_PHONG_SHADING)
+        this->enable_phong_shading = true;
 
 } // Enable()
 
@@ -390,11 +416,11 @@ void FakeGL::Light(int parameterName, const float *parameterValues)
 // sets whether textures replace or modulate
 void FakeGL::TexEnvMode(unsigned int textureMode)
 { // TexEnvMode()
-    if(textureMode == FAKEGL_REPLACE){
-        this->textureMode = FAKEGL_REPLACE;
-    }
     if(textureMode == FAKEGL_MODULATE){
         this->textureMode = FAKEGL_MODULATE;
+    }
+    if(textureMode == FAKEGL_REPLACE){
+        this->textureMode = FAKEGL_REPLACE;
     }
 } // TexEnvMode()
 
@@ -417,9 +443,9 @@ void FakeGL::Clear(unsigned int mask)
     int height = this->frameBuffer.height;
     for(int i=0;i<height;i++){
         for(int j=0;j<width;j++){
-            //clear frame & depth buffer
             this->frameBuffer[i][j] = backGroundColor;
-            if(this->enable_depth_test) {this->depthBuffer[i][j].alpha = 255;}
+            if(this->enable_depth_test) // clean depth buffer
+                this->depthBuffer[i][j].alpha = 255;
         }
     }
 
@@ -495,7 +521,6 @@ bool FakeGL::RasterisePrimitive()
     switch (this->currentPrimitive) {
         case 0:{ //rasterise a vertex
             if(this->rasterQueue.size()>=1){
-//                std::cout<<"rasterise point"<<std::endl;
                 auto vertex = rasterQueue.front();
                 rasterQueue.pop_front();
                 //screenVertexWithAttributes rasterVertex(vertex.position.x, vertex.position.y, vertex.position.z);
@@ -507,7 +532,6 @@ bool FakeGL::RasterisePrimitive()
         case 1:{  //rasterise a line
             if(this->rasterQueue.size()>=2){
 
-//                std::cout<<"rasterise line"<<std::endl;
                 auto vertex1 = rasterQueue.front();rasterQueue.pop_front();
                 auto vertex2 = rasterQueue.front();rasterQueue.pop_front();
 //                screenVertexWithAttributes rasterVertex1(vertex1.position.x, vertex1.position.y, vertex1.position.z);
@@ -519,8 +543,6 @@ bool FakeGL::RasterisePrimitive()
                 return false;
         }
         case 2:{     // rasterise a triangle
-
-//            std::cout<<"render triangle"<<std::endl;
 
             if(this->rasterQueue.size()>=3){
                 auto vertex1 = rasterQueue.front();rasterQueue.pop_front();
@@ -555,20 +577,16 @@ bool FakeGL::depthTest(int x, int y, float z){
 // rasterises a single point
 void FakeGL::RasterisePoint(screenVertexWithAttributes &vertex0)
 { // RasterisePoint()
-    std::cout<<"rasterise"<<std::endl;
     int x = vertex0.position.x;
     int y = vertex0.position.y;
     int z = vertex0.position.z;
     int pointSize = this->pointSize;
     if(pointSize==0){
-        std::cout<<"pointsize is zero"<<std::endl;
         return;
     }
 
     for(int _x=x-(pointSize/2);_x<=x+(pointSize/2);_x++){
         for(int _y=y-(pointSize/2);_y<=y+(pointSize/2);_y++){
-
-            //TODO: implement depth test
 
             fragmentWithAttributes shaderVertex(_y,_x,vertex0.colour);
             this->fragmentQueue.push_back(shaderVertex);
@@ -577,11 +595,6 @@ void FakeGL::RasterisePoint(screenVertexWithAttributes &vertex0)
     }
 
     ProcessFragment();
-
-
-
-
-
 
 } // RasterisePoint()
 
@@ -592,8 +605,6 @@ void FakeGL::RasteriseLineSegment(screenVertexWithAttributes &vertex0, screenVer
     int x0 = vertex0.position.x, y0 = vertex0.position.y;
     int x1 = vertex1.position.x, y1 = vertex1.position.y;
 
-//       std::cout<<x0<<" "<<y0<<std::endl;
-//       std::cout<<x1<<" "<<y1<<std::endl;
     bool steep = false;
     if (std::abs(x0-x1)<std::abs(y0-y1)) {
         std::swap(x0, y0);
@@ -624,12 +635,7 @@ void FakeGL::RasteriseLineSegment(screenVertexWithAttributes &vertex0, screenVer
         }
     }
 
-
-
-
     ProcessFragment();
-
-
 } // RasteriseLineSegment()
 
 // rasterises a single triangle
@@ -687,15 +693,17 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
     // create a fragment for reuse
     fragmentWithAttributes rasterFragment;
 
+    int textureWidth = textureImg.width;
+    int textureHeight = textureImg.height;
+
     float vertex0Light[3]={0,0,0}, vertex1Light[3]={0,0,0}, vertex2Light[3]={0,0,0};
     Cartesian3 v0Normal(vertex0.normal.x, vertex0.normal.y, vertex0.normal.z);
     Cartesian3 v1Normal(vertex1.normal.x, vertex1.normal.y, vertex1.normal.z);
     Cartesian3 v2Normal(vertex2.normal.x, vertex2.normal.y, vertex2.normal.z);
 
-
     Homogeneous4 eye{0,0,0,1};
     auto eyeDir = this->modelViewMat * eye;
-    Cartesian3 eyeDir3(eyeDir.x, eyeDir.y, eyeDir.z);
+    Cartesian3 eyeDir_(eyeDir.x, eyeDir.y, eyeDir.z);
 
     v0Normal = v0Normal.unit();
     v1Normal = v1Normal.unit();
@@ -716,17 +724,15 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
         auto v1diffuse = diffuseL[i]*vertex1.diffuseM[i]* std::max(v1Normal.dot(lightPosition), 0.0f);
         auto v2diffuse = diffuseL[i]*vertex2.diffuseM[i]* std::max(v2Normal.dot(lightPosition), 0.0f);
 
-        auto v0specular = specularL[i]*vertex0.specularM[i]*std::pow(std::max(v0reflectDir.dot(eyeDir3), 0.0f), this->shinessM);
-        auto v1specular = specularL[i]*vertex1.specularM[i]*std::pow(std::max(v1reflectDir.dot(eyeDir3), 0.0f), this->shinessM);
-        auto v2specular = specularL[i]*vertex2.specularM[i]*std::pow(std::max(v2reflectDir.dot(eyeDir3), 0.0f), this->shinessM);
+        auto v0specular = specularL[i]*vertex0.specularM[i]*std::pow(std::max(v0reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
+        auto v1specular = specularL[i]*vertex1.specularM[i]*std::pow(std::max(v1reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
+        auto v2specular = specularL[i]*vertex2.specularM[i]*std::pow(std::max(v2reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
 
         vertex0Light[i] += v0ambient + v0diffuse + v0specular+ this->emissionM[i];
         vertex1Light[i] += v1ambient + v1diffuse + v1specular+ this->emissionM[i];
         vertex2Light[i] += v2ambient + v2diffuse + v2specular + this->emissionM[i];
-    }
 
-    int textureWidth = this->textureImg.width;
-    int textureHeight = this->textureImg.height;
+    }
 
     // loop through the pixels in the bounding box
     for (rasterFragment.row = minY; rasterFragment.row <= maxY; rasterFragment.row++)
@@ -753,26 +759,26 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
             if ((alpha < 0.0) || (beta < 0.0) || (gamma < 0.0))
                 continue;
 
-            // compute colour
+            float z = vertex0.position.z * alpha+ vertex1.position.z * beta + vertex2.position.z * gamma;
             rasterFragment.colour = alpha * vertex0.colour + beta * vertex1.colour + gamma * vertex2.colour;
 
-            // depth test
-            float z = vertex0.position.z * alpha+ vertex1.position.z * beta + vertex2.position.z * gamma;
             if(this->enable_depth_test){
-                if(depthTest(rasterFragment.row, rasterFragment.col,z*255)){}else{continue;}
+                if(depthTest(rasterFragment.row, rasterFragment.col,z*255)){
+                }else
+                    continue;
             }
-            // texture 2D
             if(this->enable_texture_2D){
                 int interpU = (alpha * vertex0.u + beta * vertex1.u + gamma * vertex2.u)* textureWidth;
                 int interpV = (alpha * vertex0.v + beta * vertex1.v + gamma * vertex2.v)* textureHeight;
 
                 if(this->textureMode == FAKEGL_REPLACE){
                     rasterFragment.colour = this->textureImg[interpV][interpU];
+
                 }else if( this->textureMode == FAKEGL_MODULATE){
                     rasterFragment.colour.modulate(this->textureImg[interpV][interpU]);
                 }
             }
-            //lighting
+
             if(this->enable_lighting){
                 if(this->enable_phong_shading){
                     // phong shading
@@ -792,18 +798,19 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
 
                     rasterFragment.colour.red *= ambientL[0]*interplambientM[0] +
                                                  diffuseL[0]*interplspecularMastrial[0]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                 specularL[0]*interplspecularMastrial[0]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
+                                                 specularL[0]*interplspecularMastrial[0]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
                                                  this->emissionM[0];
 
                     rasterFragment.colour.green *=  ambientL[1]*interplambientM[1] +
                                                     diffuseL[1]*interplspecularMastrial[1]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                    specularL[1]*interplspecularMastrial[1]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
+                                                    specularL[1]*interplspecularMastrial[1]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
                                                     this->emissionM[1];
 
                     rasterFragment.colour.blue *=  ambientL[2]*interplambientM[2] +
                                                    diffuseL[2]*interplspecularMastrial[2]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                   specularL[2]*interplspecularMastrial[2]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
+                                                   specularL[2]*interplspecularMastrial[2]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
                                                    this->emissionM[2];
+
                 }else{
                     //gouraud shading
                     float red = (alpha*vertex0Light[0] + beta*vertex1Light[0] + gamma * vertex2Light[0]);
@@ -814,11 +821,13 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
                     rasterFragment.colour.blue *= blue;
                 }
             }
-            // add it to fragment queue
             fragmentQueue.push_back(rasterFragment);
+
         } // per pixel
+
     } // per row
     ProcessFragment();
+
 } // RasteriseTriangle()
 
 // thread fragment
@@ -828,15 +837,17 @@ void FakeGL::ProcessFragment()
     while(!this->fragmentQueue.empty()){
         auto fragment = this->fragmentQueue.front();
         this->fragmentQueue.pop_front();
+
         int x = fragment.col;
         int y = fragment.row;
+
         this->frameBuffer[y][x] = fragment.colour;
     }
 } // ProcessFragment()
 
 // standard routine for dumping the entire FakeGL context (except for texture / image)
 std::ostream &operator << (std::ostream &outStream, FakeGL &fakeGL)
-    { // operator <<
+{ // operator <<
     outStream << "=========================" << std::endl;
     outStream << "Dumping FakeGL Context   " << std::endl;
     outStream << "=========================" << std::endl;
@@ -846,65 +857,65 @@ std::ostream &operator << (std::ostream &outStream, FakeGL &fakeGL)
     outStream << "Vertex Queue:            " << std::endl;
     outStream << "-------------------------" << std::endl;
     for (auto vertex = fakeGL.vertexQueue.begin(); vertex < fakeGL.vertexQueue.end(); vertex++)
-        { // per matrix
+    { // per matrix
         outStream << "Vertex " << vertex - fakeGL.vertexQueue.begin() << std::endl;
         outStream << *vertex;
-        } // per matrix
+    } // per matrix
 
 
     outStream << "-------------------------" << std::endl;
     outStream << "Raster Queue:            " << std::endl;
     outStream << "-------------------------" << std::endl;
     for (auto vertex = fakeGL.rasterQueue.begin(); vertex < fakeGL.rasterQueue.end(); vertex++)
-        { // per matrix
+    { // per matrix
         outStream << "Vertex " << vertex - fakeGL.rasterQueue.begin() << std::endl;
         outStream << *vertex;
-        } // per matrix
+    } // per matrix
 
 
     outStream << "-------------------------" << std::endl;
     outStream << "Fragment Queue:          " << std::endl;
     outStream << "-------------------------" << std::endl;
     for (auto fragment = fakeGL.fragmentQueue.begin(); fragment < fakeGL.fragmentQueue.end(); fragment++)
-        { // per matrix
+    { // per matrix
         outStream << "Fragment " << fragment - fakeGL.fragmentQueue.begin() << std::endl;
         outStream << *fragment;
-        } // per matrix
+    } // per matrix
 
 
     return outStream;
-    } // operator <<
+} // operator <<
 
 // subroutines for other classes
 std::ostream &operator << (std::ostream &outStream, vertexWithAttributes &vertex)
-    { // operator <<
+{ // operator <<
     std::cout << "Vertex With Attributes" << std::endl;
     std::cout << "Position:   " << vertex.position << std::endl;
     std::cout << "Colour:     " << vertex.colour << std::endl;
 
-	// you
+    // you
 
     return outStream;
-    } // operator <<
+} // operator <<
 
-std::ostream &operator << (std::ostream &outStream, screenVertexWithAttributes &vertex) 
-    { // operator <<
+std::ostream &operator << (std::ostream &outStream, screenVertexWithAttributes &vertex)
+{ // operator <<
     std::cout << "Screen Vertex With Attributes" << std::endl;
     std::cout << "Position:   " << vertex.position << std::endl;
     std::cout << "Colour:     " << vertex.colour << std::endl;
 
     return outStream;
-    } // operator <<
+} // operator <<
 
 std::ostream &operator << (std::ostream &outStream, fragmentWithAttributes &fragment)
-    { // operator <<
+{ // operator <<
     std::cout << "Fragment With Attributes" << std::endl;
     std::cout << "Row:        " << fragment.row << std::endl;
     std::cout << "Col:        " << fragment.col << std::endl;
     std::cout << "Colour:     " << fragment.colour << std::endl;
 
     return outStream;
-    } // operator <<
+} // operator <<
 
 
     
