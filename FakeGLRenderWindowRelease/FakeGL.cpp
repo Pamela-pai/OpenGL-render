@@ -433,13 +433,13 @@ void FakeGL::TransformVertex()
     // model view transformation to VCS
     auto temp =  this->modelViewMat* hg4;
     // projection transformation to CCS
-    Homogeneous4 screenMatrix = this->projectionMat* temp;
+    Homogeneous4 screenHg4 = this->projectionMat* temp;
     // perspective division
-    Cartesian3 ndcs = screenMatrix.Point();
+    Cartesian3 ndcs = screenHg4.Point();
     // viewport mapping
     Homogeneous4 ndcs4 = Homogeneous4(ndcs.x, ndcs.y, ndcs.z);
-    screenMatrix = this->viewPortMat * ndcs4;
-    screenVertexWithAttributes screenVertex(screenMatrix.x, screenMatrix.y, screenMatrix.z);
+    screenHg4 = this->viewPortMat * ndcs4;
+    screenVertexWithAttributes screenVertex(screenHg4.x, screenHg4.y, screenHg4.z);
 
     screenVertex.colour = this->colorf;
     Homogeneous4 normal4 = this->modelViewMat * vertex.normal;
@@ -456,7 +456,7 @@ void FakeGL::TransformVertex()
         std::copy(std::begin(vertex.emissionM), std::end(vertex.emissionM), std::begin(screenVertex.emissionM));
         screenVertex.shinessM = vertex.shinessM;
     }
-    // start rasterise
+    // push vertex to rasterise queue
     this->rasterQueue.push_back(screenVertex);
     RasterisePrimitive();
 
