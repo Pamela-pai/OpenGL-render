@@ -198,7 +198,7 @@ void FakeGL::Scalef(float xScale, float yScale, float zScale)
 void FakeGL::Translatef(float xTranslate, float yTranslate, float zTranslate)
     { // Translatef()
     Matrix4 matrix4;
-    matrix4.SetTranslation(Cartesian3(xTranslate,yTranslate,zTranslate))
+    matrix4.SetTranslation(Cartesian3(xTranslate,yTranslate,zTranslate));
 
     if(this->currentMatMode == FAKEGL_MODELVIEW){
         this->modelViewMat = this->modelViewMat * matrix4;
@@ -216,8 +216,8 @@ void FakeGL::Viewport(int x, int y, int width, int height)
     viewPortMat[2][3] = 1;
     viewPortMat[0][0] = width/2.f;
     viewPortMat[1][1] = height/2.f;
-    viewPortMat[2][2] = 1
-    viewPortMat[3][3] = 1
+    viewPortMat[2][2] = 1;
+    viewPortMat[3][3] = 1;
     } // Viewport()
 
 //-------------------------------------------------//
@@ -263,7 +263,7 @@ void FakeGL::Materialfv(unsigned int parameterName, const float *parameterValues
 // sets the normal vector
 void FakeGL::Normal3f(float x, float y, float z)
     { // Normal3f()
-    this->normal = Homogeneous4(x,y,z,0)
+    this->normal = Homogeneous4(x,y,z,0);
     } // Normal3f()
 
 // sets the texture coordinates
@@ -303,7 +303,7 @@ void FakeGL::Disable(unsigned int property)
         if(property == FAKEGL_DEPTH_TEST) {this->enable_depth_test = false;}
         if(property == FAKEGL_LIGHTING) {this->enable_lighting = false;}
         if(property == FAKEGL_TEXTURE_2D) {this->enable_texture_2D = false;}
-        if(property == FAKEGL_PHONG_SHADING) {this->enable_phonh_shading = false;}
+        if(property == FAKEGL_PHONG_SHADING) {this->enable_phong_shading = false;}
     } // Disable()
 
 // enables a specific flag in the library
@@ -313,7 +313,7 @@ void FakeGL::Enable(unsigned int property)
             this->depthBuffer.Resize(frameBuffer.width, frameBuffer.height);}
         if(property == FAKEGL_LIGHTING) {this->enable_lighting = false;}
         if(property == FAKEGL_TEXTURE_2D) {this->enable_texture_2D = false;}
-        if(property == FAKEGL_PHONG_SHADING) {this->enable_phonh_shading = false;}
+        if(property == FAKEGL_PHONG_SHADING) {this->enable_phong_shading = false;}
 
     } // Enable()
 
@@ -383,7 +383,7 @@ void FakeGL::Clear(unsigned int mask)
         for(int j=0;j<width;j++){
             //clear frame & depth buffer
             this->frameBuffer[i][j] = backGroundColor;
-            this->enable_depth_test?this->depthBuffer[i][j].alpha = 255:;
+            if(this->enable_depth_test) {this->depthBuffer[i][j].alpha = 255;}
         }
     }
     } // Clear()
@@ -391,7 +391,7 @@ void FakeGL::Clear(unsigned int mask)
 // sets the clear colour for the frame buffer
 void FakeGL::ClearColor(float red, float green, float blue, float alpha)
     { // ClearColor()
-    this->backGroundColor=RGBAValue(red*255,green*255,blue*255,alpha*255)
+    this->backGroundColor=RGBAValue(red*255,green*255,blue*255,alpha*255);
     } // ClearColor()
 
 //-------------------------------------------------//
@@ -417,7 +417,7 @@ void FakeGL::TransformVertex()
     // viewport mapping
     Homogeneous4 ndcs4 = Homogeneous4(ndcs.x,ndcs.y,ndcs.z);
     screenResult = this->viewPortMat * ndcs4;
-    screenVertexWithAttributes screenVertex(screenResult.x,screenResult.y,screenResult,z);
+    screenVertexWithAttributes screenVertex(screenResult.x,screenResult.y,screenResult.z);
 
     screenVertex.colour = this->colorf;
     Homogeneous4 normal4 = this->modelViewMat * vertex.normal;
@@ -428,11 +428,11 @@ void FakeGL::TransformVertex()
         screenVertex.v = this->textureV;
     }
     if(this->enable_lighting){
-        std::copy(std::begin(vertex.ambientMaterial), std::end(vertex.ambientMaterial), std::begin(screenVertex.ambientMaterial));
-        std::copy(std::begin(vertex.diffuseMaterial), std::end(vertex.diffuseMaterial), std::begin(screenVertex.diffuseMaterial));
-        std::copy(std::begin(vertex.specularMaterial), std::end(vertex.specularMaterial), std::begin(screenVertex.specularMaterial));
-        std::copy(std::begin(vertex.emissionMaterial), std::end(vertex.emissionMaterial), std::begin(screenVertex.emissionMaterial));
-        screenVertex.shinessMaterial = vertex.shinessMaterial;
+        std::copy(std::begin(vertex.ambientM), std::end(vertex.ambientM), std::begin(screenVertex.ambientM));
+        std::copy(std::begin(vertex.diffuseM), std::end(vertex.diffuseM), std::begin(screenVertex.diffuseM));
+        std::copy(std::begin(vertex.specularM), std::end(vertex.specularM), std::begin(screenVertex.specularM));
+        std::copy(std::begin(vertex.emissionM), std::end(vertex.emissionM), std::begin(screenVertex.emissionM));
+        screenVertex.shinessM = vertex.shinessM;
     }
 
     // start rasterise
@@ -531,7 +531,7 @@ void FakeGL::RasteriseLineSegment(screenVertexWithAttributes &vertex0, screenVer
             this->fragmentQueue.push_back(fragVertex);
         }else{
             fragmentWithAttributes fragVertex(x,y,colorf);
-            this->fragmentQueue.push_back(fragVertex)
+            this->fragmentQueue.push_back(fragVertex);
         }
         error += disError;
         if(error > disX){

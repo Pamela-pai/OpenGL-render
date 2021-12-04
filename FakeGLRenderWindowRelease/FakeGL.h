@@ -72,7 +72,8 @@ class vertexWithAttributes
     Homogeneous4 position;
 	// Colour
     RGBAValue colour;
-
+    //texture
+    float u,v;
 	// you may need to add more state here
     float emissionM[4];
     float ambientM[4];
@@ -149,10 +150,10 @@ class FakeGL
     float lineWidth = 1;
     unsigned int currentPrimitive;
     unsigned int currentMatMode = -1;
-    std::stack<Matrix4> matStack;
     Matrix4 modelViewMat;
     Matrix4 projectionMat;
     Matrix4 viewPortMat;
+    std::stack<Matrix4> matStack;
     //material
     float shinessM;
     float emissionM[4];
