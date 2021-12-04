@@ -260,7 +260,7 @@ void FakeGL::Materialf(unsigned int parameterName, const float parameterValue)
 
 void FakeGL::Materialfv(unsigned int parameterName, const float *parameterValues)
 { // Materialfv()
-    if(parameterName & FAKEGL_EMISSION){
+    /*if(parameterName & FAKEGL_EMISSION){
         this->emissionM[0] = parameterValues[0];
         this->emissionM[1] = parameterValues[1];
         this->emissionM[2] = parameterValues[2];
@@ -283,6 +283,20 @@ void FakeGL::Materialfv(unsigned int parameterName, const float *parameterValues
         this->ambientM[1] = parameterValues[1];
         this->ambientM[2] = parameterValues[2];
         this->ambientM[3] = parameterValues[3];
+    }*/
+    if(parameterName) {
+        if (FAKEGL_EMISSION) {
+            std::copy(parameterValues, parameterValues + 4, std::begin(this->emissionM));
+        }
+        if (FAKEGL_DIFFUSE) {
+            std::copy(parameterValues, parameterValues + 4, std::begin(this->diffuseM));
+        }
+        if (FAKEGL_SPECULAR) {
+            std::copy(parameterValues, parameterValues + 4, std::begin(this->specularM));
+        }
+        if (FAKEGL_AMBIENT) {
+            std::copy(parameterValues, parameterValues + 4, std::begin(this->specularM));
+        }
     }
 
 } // Materialfv()
@@ -356,7 +370,7 @@ void FakeGL::Enable(unsigned int property)
 // sets properties for the one and only light
 void FakeGL::Light(int parameterName, const float *parameterValues)
 { // Light()
-    if(parameterName & FAKEGL_AMBIENT){
+   /* if(parameterName & FAKEGL_AMBIENT){
         ambientL[0] = parameterValues[0];
         ambientL[1] = parameterValues[1];
         ambientL[2] = parameterValues[2];
@@ -383,6 +397,20 @@ void FakeGL::Light(int parameterName, const float *parameterValues)
         positionL[2] = parameterValues[2];
         positionL[3] = parameterValues[3];
 
+    }*/
+    if(parameterName){
+        if(FAKEGL_AMBIENT){
+            std::copy(parameterValues,parameterValues+4, std::begin(this->ambientL));
+        }
+        if(FAKEGL_DIFFUSE){
+            std::copy(parameterValues,parameterValues+4, std::begin(this->diffuseL));
+        }
+        if(FAKEGL_SPECULAR){
+            std::copy(parameterValues,parameterValues+4, std::begin(this->specularL));
+        }
+        if(FAKEGL_POSITION){
+            std::copy(parameterValues,parameterValues+4, std::begin(this->positionL));
+        }
     }
 } // Light()
 
