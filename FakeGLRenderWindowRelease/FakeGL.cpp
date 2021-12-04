@@ -112,16 +112,16 @@ void FakeGL::LoadIdentity()
 // multiply by a known matrix in column-major format
 void FakeGL::MultMatrixf(const float *columnMajorCoordinates)
     { // MultMatrixf()
-    Matrix4 matrix4;
+    Matrix4 mat4;
     for(int i=0;i<16;i++){
         int x = i%4;
         int y = i/4;
-        matrix4[x][y] = columnMajorCoordinates[i];
+        mat4[x][y] = columnMajorCoordinates[i];
     }
     if(this->currentMatMode == FAKEGL_MODELVIEW){
-        this->modelViewMat = this->modelViewMat*matrix4;
+        this->modelViewMat = this->modelViewMat*mat4;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat = this->projectionMat*matrix4;
+        this->projectionMat = this->projectionMat*mat4;
     }
 
     } // MultMatrixf()
@@ -129,40 +129,40 @@ void FakeGL::MultMatrixf(const float *columnMajorCoordinates)
 // sets up a perspective projection matrix
 void FakeGL::Frustum(float left, float right, float bottom, float top, float zNear, float zFar)
     { // Frustum()
-    Matrix4 matrix4;
-    matrix4.SetZero();
+    Matrix4 mat4;
+    mat4.SetZero();
 
-    matrix4[0][0] = (2.f*zNear)/(right-left);
-    matrix4[1][1] = (2.f*zNear)/(top-bottom);
-    matrix4[0][2] = (right+left)/(right-left);
-    matrix4[1][2] = (top+bottom)/(top-bottom);
-    matrix4[2][2] = -(zFar+zNear)/(zFar-zNear);
-    matrix4[2][3] = -(2*zFar*zNear)/(zFar-zNear);
-    matrix4[3][2] = -1;
+    mat4[0][0] = (2.f*zNear)/(right-left);
+    mat4[1][1] = (2.f*zNear)/(top-bottom);
+    mat4[0][2] = (right+left)/(right-left);
+    mat4[1][2] = (top+bottom)/(top-bottom);
+    mat4[2][2] = -(zFar+zNear)/(zFar-zNear);
+    mat4[2][3] = -(2*zFar*zNear)/(zFar-zNear);
+    mat4[3][2] = -1;
 
     if(this->currentMatMode == FAKEGL_MODELVIEW){
-        this->modelViewMat = this->modelViewMat * matrix4;
+        this->modelViewMat = this->modelViewMat * mat4;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat = this->projectionMat * matrix4;
+        this->projectionMat = this->projectionMat * mat4;
     }
     } // Frustum()
 
 // sets an orthographic projection matrix
 void FakeGL::Ortho(float left, float right, float bottom, float top, float zNear, float zFar)
     { // Ortho()
-    Matrix4 matrix4;
-    matrix4[0][3] = -(right+left)/(right-left);
-    matrix4[1][3] = -(top+bottom)/(top-bottom);
-    matrix4[2][3] = -(zFar+zNear)/(zFar-zNear);
-    matrix4[0][0] = 2/(right-left);
-    matrix4[1][1] = 2/(top-bottom);
-    matrix4[2][2] = 2/(zNear-zFar);
-    matrix4[3][3] = 1;
+    Matrix4 mat4;
+    mat4[0][3] = -(right+left)/(right-left);
+    mat4[1][3] = -(top+bottom)/(top-bottom);
+    mat4[2][3] = -(zFar+zNear)/(zFar-zNear);
+    mat4[0][0] = 2/(right-left);
+    mat4[1][1] = 2/(top-bottom);
+    mat4[2][2] = 2/(zNear-zFar);
+    mat4[3][3] = 1;
 
     if(this->currentMatMode == FAKEGL_MODELVIEW){
-        this->modelViewMat = this->modelViewMat * matrix4;
+        this->modelViewMat = this->modelViewMat * mat4;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat = this->projectionMat * matrix4;
+        this->projectionMat = this->projectionMat * mat4;
     }
 
     } // Ortho()
@@ -170,40 +170,40 @@ void FakeGL::Ortho(float left, float right, float bottom, float top, float zNear
 // rotate the matrix
 void FakeGL::Rotatef(float angle, float axisX, float axisY, float axisZ)
     { // Rotatef()
-    Matrix4 matrix4;
+    Matrix4 mat4;
     float theta = angle*3.14/180.f;
-    matrix4.SetRotation(Cartesian3(axisX,axisY,axisZ),theta);
+    mat4.SetRotation(Cartesian3(axisX,axisY,axisZ),theta);
 
     if(this->currentMatMode == FAKEGL_MODELVIEW){
-        this->modelViewMat = this->modelViewMat * matrix4;
+        this->modelViewMat = this->modelViewMat * mat4;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat = this->projectionMat * matrix4;
+        this->projectionMat = this->projectionMat * mat4;
     }
     } // Rotatef()
 
 // scale the matrix
 void FakeGL::Scalef(float xScale, float yScale, float zScale)
     { // Scalef()
-    Matrix4 matrix4;
-    matrix4.SetScale(xScale,yScale,zScale);
+    Matrix4 mat4;
+    mat4.SetScale(xScale,yScale,zScale);
 
     if(this->currentMatMode == FAKEGL_MODELVIEW){
-        this->modelViewMat = this->modelViewMat * matrix4;
+        this->modelViewMat = this->modelViewMat * mat4;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat = this->projectionMat * matrix4;
+        this->projectionMat = this->projectionMat * mat4;
     }
     } // Scalef()
 
 // translate the matrix
 void FakeGL::Translatef(float xTranslate, float yTranslate, float zTranslate)
     { // Translatef()
-    Matrix4 matrix4;
-    matrix4.SetTranslation(Cartesian3(xTranslate,yTranslate,zTranslate));
+    Matrix4 mat4;
+    mat4.SetTranslation(Cartesian3(xTranslate,yTranslate,zTranslate));
 
     if(this->currentMatMode == FAKEGL_MODELVIEW){
-        this->modelViewMat = this->modelViewMat * matrix4;
+        this->modelViewMat = this->modelViewMat * mat4;
     }else if(this->currentMatMode == FAKEGL_PROJECTION){
-        this->projectionMat = this->projectionMat * matrix4;
+        this->projectionMat = this->projectionMat * mat4;
     }
     } // Translatef()
 
@@ -250,7 +250,7 @@ void FakeGL::Materialf(unsigned int parameterName, const float parameterValue)
 
 void FakeGL::Materialfv(unsigned int parameterName, const float *parameterValues)
     { // Materialfv()
-    if(parameterName){
+    /*if(parameterName){
         if(FAKEGL_EMISSION){
             std::copy(parameterValues,parameterValues+4, std::begin(this->emissionM));
         }
@@ -263,7 +263,34 @@ void FakeGL::Materialfv(unsigned int parameterName, const float *parameterValues
         if(FAKEGL_AMBIENT){
             std::copy(parameterValues,parameterValues+4, std::begin(this->specularM));
         }
-    }// Materialfv()
+    }*/
+        if(parameterName & FAKEGL_EMISSION){
+            this->emissionMaterial[0] = parameterValues[0];
+            this->emissionMaterial[1] = parameterValues[1];
+            this->emissionMaterial[2] = parameterValues[2];
+            this->emissionMaterial[3] = parameterValues[3];
+        }
+        if(parameterName&FAKEGL_DIFFUSE){
+            this->diffuseMaterial[0] = parameterValues[0];
+            this->diffuseMaterial[1] = parameterValues[1];
+            this->diffuseMaterial[2] = parameterValues[2];
+            this->diffuseMaterial[3] = parameterValues[3];
+        }
+        if(parameterName&FAKEGL_SPECULAR){
+            this->specularMaterial[0] = parameterValues[0];
+            this->specularMaterial[1] = parameterValues[1];
+            this->specularMaterial[2] = parameterValues[2];
+            this->specularMaterial[3] = parameterValues[3];
+        }
+        if(parameterName & FAKEGL_AMBIENT){
+            this->ambientMaterial[0] = parameterValues[0];
+            this->ambientMaterial[1] = parameterValues[1];
+            this->ambientMaterial[2] = parameterValues[2];
+            this->ambientMaterial[3] = parameterValues[3];
+
+
+        }
+    // Materialfv()
     }
 
 // sets the normal vector
@@ -332,7 +359,7 @@ void FakeGL::Enable(unsigned int property)
 // sets properties for the one and only light
 void FakeGL::Light(int parameterName, const float *parameterValues)
     { // Light()
-        if(parameterName){
+     /*   if(parameterName){
             if(FAKEGL_AMBIENT){
                 std::copy(parameterValues,parameterValues+4, std::begin(this->ambientL));
             }
@@ -345,6 +372,34 @@ void FakeGL::Light(int parameterName, const float *parameterValues)
             if(FAKEGL_POSITION){
                 std::copy(parameterValues,parameterValues+4, std::begin(this->positionL));
             }
+        }*/
+        if(parameterName & FAKEGL_AMBIENT){
+            ambietLight[0] = parameterValues[0];
+            ambietLight[1] = parameterValues[1];
+            ambietLight[2] = parameterValues[2];
+            ambietLight[3] = parameterValues[3];
+
+        }
+        if(parameterName & FAKEGL_DIFFUSE){
+            diffuseLight[0]=parameterValues[0];
+            diffuseLight[1]=parameterValues[1];
+            diffuseLight[2]=parameterValues[2];
+            diffuseLight[3]=parameterValues[3];
+
+        }
+        if(parameterName & FAKEGL_SPECULAR){
+            specularLight[0] = parameterValues[0];
+            specularLight[1] = parameterValues[1];
+            specularLight[2] = parameterValues[2];
+            specularLight[3] = parameterValues[3];
+
+        }
+        if(parameterName & FAKEGL_POSITION){
+            positionLight[0] = parameterValues[0];
+            positionLight[1] = parameterValues[1];
+            positionLight[2] = parameterValues[2];
+            positionLight[3] = parameterValues[3];
+
         }
     } // Light()
 
