@@ -229,10 +229,10 @@ void FakeGL::Viewport(int x, int y, int width, int height)
 } // Viewport()
 
 auto FakeGL::reflect(const Cartesian3 & vec,const Cartesian3 & normal) -> Cartesian3
-    {
-        float dn = 2 * vec.dot(normal);
-        return vec - normal * dn;
-    }
+{
+    float dn = 2 * vec.dot(normal);
+    return vec - normal * dn;
+}
 
 //-------------------------------------------------//
 //                                                 //
@@ -603,8 +603,6 @@ void FakeGL::RasteriseLineSegment(screenVertexWithAttributes &vertex0, screenVer
 void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertexWithAttributes &vertex1, screenVertexWithAttributes &vertex2)
 { // RasteriseTriangle()
 
-
-
     // compute a bounding box that starts inverted to frame size
     // clipping will happen in the raster loop proper
     float minX = frameBuffer.width, maxX = 0.0;
@@ -656,9 +654,6 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
     // create a fragment for reuse
     fragmentWithAttributes rasterFragment;
 
-    int textureWidth = textureImg.width;
-    int textureHeight = textureImg.height;
-
     float vertex0Light[3]={0,0,0}, vertex1Light[3]={0,0,0}, vertex2Light[3]={0,0,0};
     Cartesian3 v0Normal(vertex0.normal.x, vertex0.normal.y, vertex0.normal.z);
     Cartesian3 v1Normal(vertex1.normal.x, vertex1.normal.y, vertex1.normal.z);
@@ -667,10 +662,7 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
 
     Homogeneous4 eye{0,0,0,1};
     auto eyeDir = this->modelViewMat * eye;
-    Cartesian3 eyeDir_(eyeDir.x, eyeDir.y, eyeDir.z);
-//    eyeDir_ = eyeDir_.unit();
-
-
+    Cartesian3 eyeDir3(eyeDir.x, eyeDir.y, eyeDir.z);
 
     v0Normal = v0Normal.unit();
     v1Normal = v1Normal.unit();
@@ -682,11 +674,7 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
     auto v1reflectDir = reflect(lightPosition, v1Normal);
     auto v2reflectDir = reflect(lightPosition, v2Normal);
 
-
-
     for(int i=0;i<3;i++){
-
-
         auto v0ambient = ambientL[i]*vertex0.ambientM[i];
         auto v1ambient = ambientL[i]*vertex1.ambientM[i];
         auto v2ambient = ambientL[i]*vertex2.ambientM[i];
@@ -695,21 +683,17 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
         auto v1diffuse = diffuseL[i]*vertex1.diffuseM[i]* std::max(v1Normal.dot(lightPosition), 0.0f);
         auto v2diffuse = diffuseL[i]*vertex2.diffuseM[i]* std::max(v2Normal.dot(lightPosition), 0.0f);
 
-        auto v0specular = specularL[i]*vertex0.specularM[i]*std::pow(std::max(v0reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
-        auto v1specular = specularL[i]*vertex1.specularM[i]*std::pow(std::max(v1reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
-        auto v2specular = specularL[i]*vertex2.specularM[i]*std::pow(std::max(v2reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
+        auto v0specular = specularL[i]*vertex0.specularM[i]*std::pow(std::max(v0reflectDir.dot(eyeDir3), 0.0f), this->shinessM);
+        auto v1specular = specularL[i]*vertex1.specularM[i]*std::pow(std::max(v1reflectDir.dot(eyeDir3), 0.0f), this->shinessM);
+        auto v2specular = specularL[i]*vertex2.specularM[i]*std::pow(std::max(v2reflectDir.dot(eyeDir3), 0.0f), this->shinessM);
 
         vertex0Light[i] += v0ambient + v0diffuse + v0specular+ this->emissionM[i];
-
         vertex1Light[i] += v1ambient + v1diffuse + v1specular+ this->emissionM[i];
-
         vertex2Light[i] += v2ambient + v2diffuse + v2specular + this->emissionM[i];
-
     }
 
-
-
-
+    int textureWidth = this->textureImg.width;
+    int textureHeight = this->textureImg.height;
 
     // loop through the pixels in the bounding box
     for (rasterFragment.row = minY; rasterFragment.row <= maxY; rasterFragment.row++)
@@ -736,37 +720,29 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
             if ((alpha < 0.0) || (beta < 0.0) || (gamma < 0.0))
                 continue;
 
-            float z = vertex0.position.z * alpha+ vertex1.position.z * beta + vertex2.position.z * gamma;
-
-
+            // compute colour
             rasterFragment.colour = alpha * vertex0.colour + beta * vertex1.colour + gamma * vertex2.colour;
 
+            // depth test
+            float z = vertex0.position.z * alpha+ vertex1.position.z * beta + vertex2.position.z * gamma;
             if(this->enable_depth_test){
-                if(depthTest(rasterFragment.row, rasterFragment.col,z*255)){
-                    // now we add it to the queue for fragment processing
-                }else
-                    continue;
+                if(depthTest(rasterFragment.row, rasterFragment.col,z*255)){}else{continue;}
             }
-
-
-
+            // texture 2D
             if(this->enable_texture_2D){
-
                 int interpU = (alpha * vertex0.u + beta * vertex1.u + gamma * vertex2.u)* textureWidth;
                 int interpV = (alpha * vertex0.v + beta * vertex1.v + gamma * vertex2.v)* textureHeight;
 
                 if(this->textureMode == FAKEGL_REPLACE){
                     rasterFragment.colour = this->textureImg[interpV][interpU];
-
                 }else if( this->textureMode == FAKEGL_MODULATE){
                     rasterFragment.colour.modulate(this->textureImg[interpV][interpU]);
                 }
             }
-
+            //lighting
             if(this->enable_lighting){
-
                 if(this->enable_phong_shading){
-
+                    // phong shading
                     Cartesian3 interplNormal;
                     interplNormal = alpha * v0Normal + beta*v1Normal + gamma*v2Normal;
 
@@ -783,28 +759,20 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
 
                     rasterFragment.colour.red *= ambientL[0]*interplambientM[0] +
                                                  diffuseL[0]*interplspecularMastrial[0]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                 specularL[0]*interplspecularMastrial[0]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
+                                                 specularL[0]*interplspecularMastrial[0]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
                                                  this->emissionM[0];
 
                     rasterFragment.colour.green *=  ambientL[1]*interplambientM[1] +
                                                     diffuseL[1]*interplspecularMastrial[1]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                    specularL[1]*interplspecularMastrial[1]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
+                                                    specularL[1]*interplspecularMastrial[1]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
                                                     this->emissionM[1];
 
                     rasterFragment.colour.blue *=  ambientL[2]*interplambientM[2] +
                                                    diffuseL[2]*interplspecularMastrial[2]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                   specularL[2]*interplspecularMastrial[2]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
+                                                   specularL[2]*interplspecularMastrial[2]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
                                                    this->emissionM[2];
-
-
-
-
-
-
-
-
-                }else{ //ground shading
-
+                }else{
+                    //gouraud shading
                     float red = (alpha*vertex0Light[0] + beta*vertex1Light[0] + gamma * vertex2Light[0]);
                     float green = (alpha*vertex0Light[1] + beta*vertex1Light[1] + gamma * vertex2Light[1]);
                     float blue = (alpha*vertex0Light[2] + beta*vertex1Light[2] + gamma * vertex2Light[2]);
@@ -813,20 +781,11 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
                     rasterFragment.colour.blue *= blue;
                 }
             }
-
-
-
-
-
-
-
+            // add it to fragment queue
             fragmentQueue.push_back(rasterFragment);
-
         } // per pixel
-
     } // per row
     ProcessFragment();
-
 } // RasteriseTriangle()
 
 // thread fragment
