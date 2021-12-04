@@ -24,8 +24,8 @@
 #include "RGBAImage.h"
 #include <vector>
 #include <deque>
-//#include <stack>
-//#include <algorithm>
+#include <stack>
+#include <algorithm>
 
 // we will store all of the FakeGL context in a class object
 // this is similar to the real OpenGL which handles multiple windows
