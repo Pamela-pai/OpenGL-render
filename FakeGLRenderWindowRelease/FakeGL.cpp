@@ -621,7 +621,7 @@ void FakeGL::RasteriseLineSegment(screenVertexWithAttributes &vertex0, screenVer
             fragmentWithAttributes fragmentVertex(y, x, colorf);
             this->fragmentQueue.push_back(fragmentVertex);
         }
-        error2 += dis2Y;
+        acc += dis2Y;
         if (acc > disX) {
             y += (y1>y0?1:-1);
             acc -= disX*2;
