@@ -732,7 +732,7 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
     v0Normal = v0Normal.unit();
     v1Normal = v1Normal.unit();
     v2Normal = v2Normal.unit();
-    Cartesian3 lightPosition(this->positionLight[0], this->positionLight[1], this->positionLight[2]);
+    Cartesian3 lightPosition(this->positionL[0], this->positionL[1], this->positionL[2]);
     lightPosition = lightPosition.unit();
 
     auto v0reflectDir = reflect(lightPosition, v0Normal);
@@ -744,17 +744,17 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
     for(int i=0;i<3;i++){
 
 
-        auto v0ambient = ambietLight[i]*vertex0.ambientM[i];
-        auto v1ambient = ambietLight[i]*vertex1.ambientM[i];
-        auto v2ambient = ambietLight[i]*vertex2.ambientM[i];
+        auto v0ambient = ambietL[i]*vertex0.ambientM[i];
+        auto v1ambient = ambietL[i]*vertex1.ambientM[i];
+        auto v2ambient = ambietL[i]*vertex2.ambientM[i];
 
-        auto v0diffuse = diffuseLight[i]*vertex0.diffuseM[i]* std::max(v0Normal.dot(lightPosition), 0.0f);
-        auto v1diffuse = diffuseLight[i]*vertex1.diffuseM[i]* std::max(v1Normal.dot(lightPosition), 0.0f);
-        auto v2diffuse = diffuseLight[i]*vertex2.diffuseM[i]* std::max(v2Normal.dot(lightPosition), 0.0f);
+        auto v0diffuse = diffuseL[i]*vertex0.diffuseM[i]* std::max(v0Normal.dot(lightPosition), 0.0f);
+        auto v1diffuse = diffuseL[i]*vertex1.diffuseM[i]* std::max(v1Normal.dot(lightPosition), 0.0f);
+        auto v2diffuse = diffuseL[i]*vertex2.diffuseM[i]* std::max(v2Normal.dot(lightPosition), 0.0f);
 
-        auto v0specular = specularLight[i]*vertex0.specularM[i]*std::pow(std::max(v0reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
-        auto v1specular = specularLight[i]*vertex1.specularM[i]*std::pow(std::max(v1reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
-        auto v2specular = specularLight[i]*vertex2.specularM[i]*std::pow(std::max(v2reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
+        auto v0specular = specularL[i]*vertex0.specularM[i]*std::pow(std::max(v0reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
+        auto v1specular = specularL[i]*vertex1.specularM[i]*std::pow(std::max(v1reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
+        auto v2specular = specularL[i]*vertex2.specularM[i]*std::pow(std::max(v2reflectDir.dot(eyeDir_), 0.0f), this->shinessM);
 
         vertex0Light[i] += v0ambient + v0diffuse + v0specular+ this->emissionM[i];
 
@@ -838,19 +838,19 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
 
                     auto lightReflect = reflect(lightPosition, interplNormal);
 
-                    rasterFragment.colour.red *= ambietLight[0]*interplambientM[0] +
-                                                 diffuseLight[0]*interplspecularMastrial[0]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                 specularLight[0]*interplspecularMastrial[0]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
+                    rasterFragment.colour.red *= ambietL[0]*interplambientM[0] +
+                                                 diffuseL[0]*interplspecularMastrial[0]*std::max(interplNormal.dot(lightPosition), 0.0f)+
+                                                 specularL[0]*interplspecularMastrial[0]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
                                                  this->emissionM[0];
 
-                    rasterFragment.colour.green *=  ambietLight[1]*interplambientM[1] +
-                                                    diffuseLight[1]*interplspecularMastrial[1]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                    specularLight[1]*interplspecularMastrial[1]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
+                    rasterFragment.colour.green *=  ambietL[1]*interplambientM[1] +
+                                                    diffuseL[1]*interplspecularMastrial[1]*std::max(interplNormal.dot(lightPosition), 0.0f)+
+                                                    specularL[1]*interplspecularMastrial[1]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
                                                     this->emissionM[1];
 
-                    rasterFragment.colour.blue *=  ambietLight[2]*interplambientM[2] +
-                                                   diffuseLight[2]*interplspecularMastrial[2]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                   specularLight[2]*interplspecularMastrial[2]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
+                    rasterFragment.colour.blue *=  ambietL[2]*interplambientM[2] +
+                                                   diffuseL[2]*interplspecularMastrial[2]*std::max(interplNormal.dot(lightPosition), 0.0f)+
+                                                   specularL[2]*interplspecularMastrial[2]*std::pow(std::max(lightReflect.dot(eyeDir_), 0.0f), this->shinessM)+
                                                    this->emissionM[2];
 
 
