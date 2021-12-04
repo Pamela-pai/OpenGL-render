@@ -123,8 +123,7 @@ class fragmentWithAttributes
     RGBAValue colour;
 
 	// you may need to add more state here
-//    fragmentWithAttributes(){};
-
+    fragmentWithAttributes(){};
     fragmentWithAttributes(float x,float y,RGBAValue _colour){
         row = x;
         col = y;
