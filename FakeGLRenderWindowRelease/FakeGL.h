@@ -123,7 +123,7 @@ class fragmentWithAttributes
     RGBAValue colour;
 
 	// you may need to add more state here
-    fragmentWithAttributes(){};
+//    fragmentWithAttributes(){};
 
     fragmentWithAttributes(float x,float y,RGBAValue _colour){
         row = x;
@@ -292,6 +292,8 @@ class FakeGL
     
     // sets the viewport
     void Viewport(int x, int y, int width, int height);
+
+    auto reflect(const Cartesian3 & vec,const Cartesian3 & normal) -> Cartesian3;
 
     //-------------------------------------------------//
     //                                                 //
