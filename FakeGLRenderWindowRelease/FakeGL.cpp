@@ -605,9 +605,7 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
     // but notice that if they are zero, the vertices are collinear in projection and the triangle is edge on
     // we can render that as a line, but the better solution is to render nothing.  In a surface, the adjacent
     // triangles will eventually take care of it
-    if ((distance0 == 0) || (distance1 == 0) || (distance2 == 0))
-        return; 
-
+    if ((distance0 == 0) || (distance1 == 0) || (distance2 == 0)){return;}
     // create a fragment for reuse
     fragmentWithAttributes rasterFragment;
 
