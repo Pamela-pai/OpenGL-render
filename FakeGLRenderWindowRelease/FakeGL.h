@@ -148,7 +148,7 @@ class FakeGL
     float pointSize = 1;
     float lineWidth = 1;
     unsigned int currentPrimitive;
-    unsigned int currentMatMode = -1;
+    unsigned int currentMatrixMode = -1;
     Matrix4 modelViewMat;
     Matrix4 projectionMat;
     Matrix4 viewPortMat;

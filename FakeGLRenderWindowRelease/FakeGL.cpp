@@ -74,15 +74,15 @@ void FakeGL::LineWidth(float width)
 // set the matrix mode (i.e. which one we change)
 void FakeGL::MatrixMode(unsigned int whichMatrix)
 { // MatrixMode()
-    this->currentMatMode = whichMatrix;
+    this->currentMatrixMode = whichMatrix;
 } // MatrixMode()
 
 // pushes a matrix on the stack
 void FakeGL::PushMatrix()
 { // PushMatrix()
-    if(this->currentMatMode==FAKEGL_MODELVIEW){
+    if(this->currentMatrixMode==FAKEGL_MODELVIEW){
         this->matStack.push(this->modelViewMat);
-    }else if(this->currentMatMode == FAKEGL_PROJECTION){
+    }else if(this->currentMatrixMode == FAKEGL_PROJECTION){
         this->matStack.push(this->projectionMat);
     }
 } // PushMatrix()
@@ -90,10 +90,10 @@ void FakeGL::PushMatrix()
 // pops a matrix off the stack
 void FakeGL::PopMatrix()
 { // PopMatrix()
-    if(this->currentMatMode==FAKEGL_MODELVIEW){
+    if(this->currentMatrixMode==FAKEGL_MODELVIEW){
         this->modelViewMat = this->matStack.top();
         this->matStack.pop();
-    }else if(this->currentMatMode == FAKEGL_PROJECTION){
+    }else if(this->currentMatrixMode == FAKEGL_PROJECTION){
         this->projectionMat = this->matStack.top();
         this->matStack.pop();
     }
@@ -102,9 +102,9 @@ void FakeGL::PopMatrix()
 // load the identity matrix
 void FakeGL::LoadIdentity()
 { // LoadIdentity()
-    if(this->currentMatMode==FAKEGL_MODELVIEW){
+    if(this->currentMatrixMode==FAKEGL_MODELVIEW){
         this->modelViewMat.SetIdentity();
-    }else if(this->currentMatMode == FAKEGL_PROJECTION){
+    }else if(this->currentMatrixMode == FAKEGL_PROJECTION){
         this->projectionMat.SetIdentity();
     }
 } // LoadIdentity()
@@ -118,9 +118,9 @@ void FakeGL::MultMatrixf(const float *columnMajorCoordinates)
         int y = i/4;
         mat4[x][y] = columnMajorCoordinates[i];
     }
-    if(this->currentMatMode==FAKEGL_MODELVIEW){
+    if(this->currentMatrixMode==FAKEGL_MODELVIEW){
         this->modelViewMat =  this->modelViewMat *mat4;
-    }else if(this->currentMatMode == FAKEGL_PROJECTION){
+    }else if(this->currentMatrixMode == FAKEGL_PROJECTION){
         this->projectionMat = this->projectionMat * mat4;
     }
 
@@ -141,9 +141,9 @@ void FakeGL::Frustum(float left, float right, float bottom, float top, float zNe
     mat4[2][3] = -(2*zFar*zNear)/(zFar-zNear);
     mat4[3][2] = -1;
 
-    if(this->currentMatMode == FAKEGL_MODELVIEW){
+    if(this->currentMatrixMode == FAKEGL_MODELVIEW){
         this->modelViewMat = this->modelViewMat * mat4;
-    }else if(this->currentMatMode == FAKEGL_PROJECTION){
+    }else if(this->currentMatrixMode == FAKEGL_PROJECTION){
         this->projectionMat = this->projectionMat * mat4;
     }
 
@@ -163,9 +163,9 @@ void FakeGL::Ortho(float left, float right, float bottom, float top, float zNear
     mat4[2][2] = -2/(zFar-zNear);
     mat4[3][3] = 1;
 
-    if(this->currentMatMode == FAKEGL_MODELVIEW){
+    if(this->currentMatrixMode == FAKEGL_MODELVIEW){
         this->modelViewMat =  this->modelViewMat * mat4;
-    }else if(this->currentMatMode == FAKEGL_PROJECTION){
+    }else if(this->currentMatrixMode == FAKEGL_PROJECTION){
         this->projectionMat = this->projectionMat * mat4;
     }
 
@@ -179,9 +179,9 @@ void FakeGL::Rotatef(float angle, float axisX, float axisY, float axisZ)
     float theta = angle * 3.14 / 180.f;
     mat4.SetRotation(Cartesian3(axisX, axisY, axisZ),theta);
 
-    if(this->currentMatMode==FAKEGL_MODELVIEW){
+    if(this->currentMatrixMode==FAKEGL_MODELVIEW){
         this->modelViewMat =  this->modelViewMat * mat4;
-    }else if(this->currentMatMode == FAKEGL_PROJECTION){
+    }else if(this->currentMatrixMode == FAKEGL_PROJECTION){
         this->projectionMat = this->projectionMat * mat4;
     }
 
@@ -193,9 +193,9 @@ void FakeGL::Scalef(float xScale, float yScale, float zScale)
     Matrix4 mat4;
     mat4.SetScale(xScale, yScale, zScale);
 
-    if(this->currentMatMode==FAKEGL_MODELVIEW){
+    if(this->currentMatrixMode==FAKEGL_MODELVIEW){
         this->modelViewMat =  this->modelViewMat *mat4;
-    }else if(this->currentMatMode == FAKEGL_PROJECTION){
+    }else if(this->currentMatrixMode == FAKEGL_PROJECTION){
         this->projectionMat =  this->projectionMat *mat4;
     }
 
@@ -208,9 +208,9 @@ void FakeGL::Translatef(float xTranslate, float yTranslate, float zTranslate)
     Matrix4 mat4;
     mat4.SetTranslation(Cartesian3(xTranslate, yTranslate, zTranslate));
 
-    if(this->currentMatMode==FAKEGL_MODELVIEW){
+    if(this->currentMatrixMode==FAKEGL_MODELVIEW){
         this->modelViewMat =   this->modelViewMat * mat4 ;
-    }else if(this->currentMatMode == FAKEGL_PROJECTION){
+    }else if(this->currentMatrixMode == FAKEGL_PROJECTION){
         this->projectionMat =  this->projectionMat * mat4;
     }
 } // Translatef()
@@ -260,30 +260,7 @@ void FakeGL::Materialf(unsigned int parameterName, const float parameterValue)
 
 void FakeGL::Materialfv(unsigned int parameterName, const float *parameterValues)
 { // Materialfv()
-    /*if(parameterName & FAKEGL_EMISSION){
-        this->emissionM[0] = parameterValues[0];
-        this->emissionM[1] = parameterValues[1];
-        this->emissionM[2] = parameterValues[2];
-        this->emissionM[3] = parameterValues[3];
-    }
-    if(parameterName&FAKEGL_DIFFUSE){
-        this->diffuseM[0] = parameterValues[0];
-        this->diffuseM[1] = parameterValues[1];
-        this->diffuseM[2] = parameterValues[2];
-        this->diffuseM[3] = parameterValues[3];
-    }
-    if(parameterName&FAKEGL_SPECULAR){
-        this->specularM[0] = parameterValues[0];
-        this->specularM[1] = parameterValues[1];
-        this->specularM[2] = parameterValues[2];
-        this->specularM[3] = parameterValues[3];
-    }
-    if(parameterName & FAKEGL_AMBIENT){
-        this->ambientM[0] = parameterValues[0];
-        this->ambientM[1] = parameterValues[1];
-        this->ambientM[2] = parameterValues[2];
-        this->ambientM[3] = parameterValues[3];
-    }*/
+
     if(parameterName) {
         if (FAKEGL_EMISSION) {
             std::copy(parameterValues, parameterValues + 4, std::begin(this->emissionM));
@@ -370,34 +347,6 @@ void FakeGL::Enable(unsigned int property)
 // sets properties for the one and only light
 void FakeGL::Light(int parameterName, const float *parameterValues)
 { // Light()
-   /* if(parameterName & FAKEGL_AMBIENT){
-        ambientL[0] = parameterValues[0];
-        ambientL[1] = parameterValues[1];
-        ambientL[2] = parameterValues[2];
-        ambientL[3] = parameterValues[3];
-
-    }
-    if(parameterName & FAKEGL_DIFFUSE){
-        diffuseL[0]=parameterValues[0];
-        diffuseL[1]=parameterValues[1];
-        diffuseL[2]=parameterValues[2];
-        diffuseL[3]=parameterValues[3];
-
-    }
-    if(parameterName & FAKEGL_SPECULAR){
-        specularL[0] = parameterValues[0];
-        specularL[1] = parameterValues[1];
-        specularL[2] = parameterValues[2];
-        specularL[3] = parameterValues[3];
-
-    }
-    if(parameterName & FAKEGL_POSITION){
-        positionL[0] = parameterValues[0];
-        positionL[1] = parameterValues[1];
-        positionL[2] = parameterValues[2];
-        positionL[3] = parameterValues[3];
-
-    }*/
     if(parameterName){
         if(FAKEGL_AMBIENT){
             std::copy(parameterValues,parameterValues+4, std::begin(this->ambientL));
@@ -481,16 +430,16 @@ void FakeGL::TransformVertex()
     vertexQueue.pop_front();
 
     Homogeneous4 hg4(vertex.position.x, vertex.position.y, vertex.position.z);
-    // model view transformation
+    // model view transformation to VCS
     auto temp =  this->modelViewMat* hg4;
-    // projection transformation
-    Homogeneous4 screenResult = this->projectionMat* temp;
+    // projection transformation to CCS
+    Homogeneous4 screenMatrix = this->projectionMat* temp;
     // perspective division
-    Cartesian3 ndcs = screenResult.Point();
+    Cartesian3 ndcs = screenMatrix.Point();
     // viewport mapping
     Homogeneous4 ndcs4 = Homogeneous4(ndcs.x, ndcs.y, ndcs.z);
-    screenResult = this->viewPortMat * ndcs4;
-    screenVertexWithAttributes  screenVertex(screenResult.x, screenResult.y, screenResult.z);
+    screenMatrix = this->viewPortMat * ndcs4;
+    screenVertexWithAttributes screenVertex(screenMatrix.x, screenMatrix.y, screenMatrix.z);
 
     screenVertex.colour = this->colorf;
     Homogeneous4 normal4 = this->modelViewMat * vertex.normal;
@@ -506,7 +455,6 @@ void FakeGL::TransformVertex()
         std::copy(std::begin(vertex.specularM), std::end(vertex.specularM), std::begin(screenVertex.specularM));
         std::copy(std::begin(vertex.emissionM), std::end(vertex.emissionM), std::begin(screenVertex.emissionM));
         screenVertex.shinessM = vertex.shinessM;
-
     }
     // start rasterise
     this->rasterQueue.push_back(screenVertex);
@@ -771,33 +719,33 @@ void FakeGL::RasteriseTriangle(screenVertexWithAttributes &vertex0, screenVertex
             if(this->enable_lighting){
                 if(this->enable_phong_shading){
                     // phong shading
-                    Cartesian3 interplNormal;
-                    interplNormal = alpha * v0Normal + beta*v1Normal + gamma*v2Normal;
+                    Cartesian3 interpNormal;
+                    interpNormal = alpha * v0Normal + beta*v1Normal + gamma*v2Normal;
 
-                    float interplambientM[3];
-                    float interpldiffuseM[3];
-                    float interplspecularMastrial[3];
+                    float interpAmbientM[3];
+                    float interpDiffuseM[3];
+                    float interpSpecularM[3];
                     for(int i=0;i<3;i++){
-                        interplambientM[i] = alpha*vertex0.ambientM[i] + beta* vertex1.ambientM[i] + gamma*vertex2.ambientM[i];
-                        interpldiffuseM[i] = alpha*vertex0.diffuseM[i] + beta * vertex1.diffuseM[i] + gamma*vertex2.diffuseM[i];
-                        interplspecularMastrial[i] = alpha*vertex0.specularM[i] + beta *vertex1.specularM[i] + gamma*vertex2.specularM[i];
+                        interpAmbientM[i] = alpha*vertex0.ambientM[i] + beta* vertex1.ambientM[i] + gamma*vertex2.ambientM[i];
+                        interpDiffuseM[i] = alpha*vertex0.diffuseM[i] + beta * vertex1.diffuseM[i] + gamma*vertex2.diffuseM[i];
+                        interpSpecularM[i] = alpha*vertex0.specularM[i] + beta *vertex1.specularM[i] + gamma*vertex2.specularM[i];
                     }
 
-                    auto lightReflect = reflect(lightPosition, interplNormal);
+                    auto lightReflect = reflect(lightPosition, interpNormal);
 
-                    rasterFragment.colour.red *= ambientL[0]*interplambientM[0] +
-                                                 diffuseL[0]*interplspecularMastrial[0]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                 specularL[0]*interplspecularMastrial[0]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
+                    rasterFragment.colour.red *= ambientL[0]*interpAmbientM[0] +
+                                                 diffuseL[0]*interpSpecularM[0]*std::max(interpNormal.dot(lightPosition), 0.0f)+
+                                                 specularL[0]*interpSpecularM[0]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
                                                  this->emissionM[0];
 
-                    rasterFragment.colour.green *=  ambientL[1]*interplambientM[1] +
-                                                    diffuseL[1]*interplspecularMastrial[1]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                    specularL[1]*interplspecularMastrial[1]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
+                    rasterFragment.colour.green *=  ambientL[1]*interpAmbientM[1] +
+                                                    diffuseL[1]*interpSpecularM[1]*std::max(interpNormal.dot(lightPosition), 0.0f)+
+                                                    specularL[1]*interpSpecularM[1]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
                                                     this->emissionM[1];
 
-                    rasterFragment.colour.blue *=  ambientL[2]*interplambientM[2] +
-                                                   diffuseL[2]*interplspecularMastrial[2]*std::max(interplNormal.dot(lightPosition), 0.0f)+
-                                                   specularL[2]*interplspecularMastrial[2]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
+                    rasterFragment.colour.blue *=  ambientL[2]*interpAmbientM[2] +
+                                                   diffuseL[2]*interpSpecularM[2]*std::max(interpNormal.dot(lightPosition), 0.0f)+
+                                                   specularL[2]*interpSpecularM[2]*std::pow(std::max(lightReflect.dot(eyeDir3), 0.0f), this->shinessM)+
                                                    this->emissionM[2];
                 }else{
                     //gouraud shading
